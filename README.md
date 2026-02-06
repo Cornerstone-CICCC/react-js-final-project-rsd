@@ -39,7 +39,7 @@ Choose at least one:
 ### Authentication 👮🏻
 
 - User signup and login
-- Password strength checker such as [zcvbn](https://www.npmjs.com/package/zxcvbn)
+- Password strength checker such as [zxcvbn](https://www.npmjs.com/package/zxcvbn)
 - Cookies (optionally you can store JWT for extra security)
 
 ### Deployment
