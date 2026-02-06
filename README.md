@@ -42,7 +42,7 @@ Choose at least one:
 - Password strength checker such as [zxcvbn](https://www.npmjs.com/package/zxcvbn)
 - Cookies (optionally you can store JWT for extra security)
 
-### Deployment
+### Deployment 🤖
 
 Depending on your stack, deploy your project through any of these free platforms:
 
