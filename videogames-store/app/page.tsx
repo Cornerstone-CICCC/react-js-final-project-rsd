@@ -1,9 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useToast } from "./store/toast";
+import { useWishlist } from "./store/wishlist";
 
 export default function Home() {
+
+  const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
+  const game = { id: "halo-infinite", title: "Halo Infinite", price: "$59.99", image: "https://placehold.co/800x400/png", }; 
+  const alreadyAdded = items.some((g) => g.id === game.id);
+  const showToast = useToast((state) => state.show);
+  
   return (
     <main className="min-h-screen bg-black text-white">
+
       <section className="relative h-[500px] w-full">
         <Image
           src="https://placehold.co/1600x500/png"
@@ -24,8 +35,21 @@ export default function Home() {
               Play Now
             </button>
 
-            <button className="px-6 py-3 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition">
-              Add to Wishlist
+             <button
+              onClick={() => {
+                addToWishlist(game);
+                showToast("Added to wishlist ✓");
+              }}
+              disabled={alreadyAdded}
+              className={`
+                px-6 py-3 rounded-lg border transition
+                ${alreadyAdded
+                  ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
+                  : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                }
+              `}
+            >
+              {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
             </button>
           </div>
         </div>
@@ -89,7 +113,7 @@ function GameGrid() {
       {games.map((g) => (
         <Link
           key={g.id}
-          href={`/games/${g.id}`}
+          href={`/gamedetail/${g.id}`}
           className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:bg-zinc-800 transition"
         >
           <Image

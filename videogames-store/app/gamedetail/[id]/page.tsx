@@ -1,6 +1,23 @@
+"use client";
+
 import Image from "next/image";
+import { useWishlist } from "@/app/store/wishlist";
+import { useToast } from "@/app/store/toast";
+import { useCart } from "@/app/store/cart";
 
 export default function GameDetail() {
+
+  const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
+  const game = { id: "halo-infinite", title: "Halo Infinite", price: "$59.99", image: "https://placehold.co/800x400/png", }; 
+  const alreadyAdded = items.some((g) => g.id === game.id);
+  const showToast = useToast((state) => state.show);
+
+  const addToCart = useCart((s) => s.add);
+  const openCart = useCart((s) => s.open);
+
+  
+
+
   return (
     <div className="min-h-screen bg-black text-white px-10 py-20">
 
@@ -38,11 +55,38 @@ export default function GameDetail() {
           </div>
 
           <div className="flex gap-4">
-            <button className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition">
-              Add to Cart
-            </button>
-            <button className="px-6 py-3 bg-zinc-800 border border-zinc-700 rounded-lg hover:bg-zinc-700 transition">
-              Add to Wishlist
+            <button
+                onClick={() => {
+                  addToCart({
+                    id: game.id,
+                    title: game.title,
+                    price: 59.99,
+                    image: game.image,
+                    quantity: 1,
+                  });
+                  showToast("Added to cart ✓");
+                  openCart(); 
+                }}
+                className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition"
+              >
+                Add to Cart
+              </button>
+
+            <button
+              onClick={() => {
+                addToWishlist(game);
+                showToast("Added to wishlist ✓");
+              }}
+              disabled={alreadyAdded}
+              className={`
+                px-6 py-3 rounded-lg border transition
+                ${alreadyAdded
+                  ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
+                  : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                }
+              `}
+            >
+              {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
             </button>
           </div>
 
