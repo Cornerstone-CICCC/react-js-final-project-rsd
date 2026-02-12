@@ -41,8 +41,8 @@ export default function Header() {
 
         <div className="hidden md:flex items-center gap-10 text-zinc-300">
           <Link href="/" className="hover:text-white transition">Home</Link>
-          <Link href="/wishlist" className="hover:text-white transition">Library</Link>
-          <Link href="/support" className="hover:text-white transition">Support</Link>
+          <Link href="/wishlist" className="hover:text-white transition">Wishlist</Link>
+          <Link href="/library" className="hover:text-white transition">Library</Link>
           <Link href="/community" className="hover:text-white transition">Community</Link>
         </div>
 

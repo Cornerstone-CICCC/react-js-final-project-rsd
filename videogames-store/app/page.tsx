@@ -32,7 +32,7 @@ export default function Home() {
 
           <div className="flex gap-4">
             <button className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition">
-              Play Now
+              View More 
             </button>
 
              <button
@@ -57,27 +57,50 @@ export default function Home() {
 
       <div className="px-16 py-12 space-y-16">
 
-        <Section title="Trending Now">
+        <Section title={ <> Trending <span className="text-[#3DFF6B]">Now</span> </> }>
           <GameGrid />
         </Section>
 
-        <Section title="Top Sellers">
+        <Section title={ <> Top <span className="text-[#3DFF6B]">Sellers</span> </> }>
           <GameGrid />
         </Section>
 
-        <Section title="New Releases">
+        <Section title={ <> New <span className="text-[#3DFF6B]">Releases</span> </> }>
           <GameGrid />
         </Section>
 
-        <div className="bg-gradient-to-r from-green-600 to-green-400 p-10 rounded-xl text-black text-center">
-          <h2 className="text-3xl font-bold mb-2">
-            PLAY HUNDREDS OF HIGH-QUALITY GAMES
-          </h2>
-          <p className="mb-6">Join our subscription and unlock unlimited access.</p>
+       <div className="relative w-full rounded-xl overflow-hidden 
+                bg-black border border-zinc-700 p-10">
 
-          <button className="px-6 py-3 bg-black text-green-400 font-semibold rounded-lg hover:bg-zinc-900 transition">
-            Subscribe
-          </button>
+          <img
+            src="https://placehold.co/1200x500/png"
+            alt="Gaming Promo"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+
+          <div className="relative z-10 max-w-xl">
+            <h2 className="text-3xl font-extrabold text-white leading-tight mb-4">
+              PLAY HUNDREDS OF{" "}
+              <span className="text-[#3DFF6B]">HIGH‑QUALITY GAMES</span>
+            </h2>
+
+
+            <p className="text-zinc-300 text-lg mb-6">
+              Join Game Pass today and play new titles on day one. Experience the best gaming value ever.
+            </p>
+
+            <div className="flex gap-4">
+              <button className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition">
+                Subscribe
+              </button>
+
+              <button className="px-6 py-3 border border-zinc-600 text-white rounded-lg hover:bg-zinc-700 transition">
+                Learn More
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </main>
@@ -86,9 +109,10 @@ export default function Home() {
 
 
 type SectionProps = {
-  title: string;
+  title: React.ReactNode;
   children: React.ReactNode;
 };
+
 
 function Section({ title, children }: SectionProps) {
   return (

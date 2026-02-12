@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useCart } from "@/app/store/cart";
 import { X, Trash2 } from "lucide-react";
-
+import Link from "next/link";
 export default function Cart() {
   const { items, isOpen, close, increase, decrease, remove } = useCart();
 
@@ -11,7 +11,7 @@ export default function Cart() {
     (acc, item) => acc + item.price * item.quantity,
     0
   );
-
+  
   return (
     <>
       {isOpen && (
@@ -53,22 +53,22 @@ export default function Cart() {
               </div>
 
               <div className="flex-1">
-                <h3 className="font-semibold">{item.title}</h3>
+                <h3 className="font-semibold text-white">{item.title}</h3>
                 <p className="text-green-400 font-bold">${item.price}</p>
 
                 <div className="flex items-center gap-3 mt-2">
                   <button
                     onClick={() => decrease(item.id)}
-                    className="px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700"
+                    className="px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 text-white"
                   >
                     -
                   </button>
 
-                  <span>{item.quantity}</span>
+                  <span className="text-white">{item.quantity}</span>
 
                   <button
                     onClick={() => increase(item.id)}
-                    className="px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700"
+                    className="px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 text-white"
                   >
                     +
                   </button>
@@ -85,21 +85,40 @@ export default function Cart() {
           ))}
         </div>
 
-        <div className="mt-6 border-t border-zinc-800 pt-4">
-          <div className="flex justify-between text-lg font-semibold">
-            <span>Total</span>
-            <span>${subtotal.toFixed(2)}</span>
+        <div className="mt-6 space-y-2 text-zinc-300">
+          <div className="flex justify-between">
+            <span>Subtotal</span>
+            <span className="text-white font-semibold">
+              ${subtotal.toFixed(2)}
+            </span>
           </div>
 
-          <button className="w-full mt-4 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition">
-            Checkout Now →
-          </button>
+          <div className="flex justify-between">
+            <span>Total</span>
+            <span className="text-green-400 font-bold">
+              ${subtotal.toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        <button
+            onClick={() => {
+                close();
+                alert("Proceeding to checkout...");}}
+            className="w-full mt-4 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition"
+            >
+            <Link href="/checkout" className="block w-full h-full text-center">
+                Checkout Now →
+            </Link>
+
+        </button>
+
+
 
           <p className="text-xs text-zinc-500 mt-2 text-center">
             Secure checkout powered by GameHub Pay
           </p>
         </div>
-      </div>
     </>
   );
 }

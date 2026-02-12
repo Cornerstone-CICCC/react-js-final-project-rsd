@@ -1,10 +1,41 @@
 "use client";
 
 import { useState } from "react";
-
+import { useCart } from "@/app/store/cart";
+import { useRouter } from "next/navigation";
+import { useLibrary } from "../store/library";
 
 export default function CheckoutPage() {
-  const [promo, setPromo] = useState("");
+  const items = useCart((s) => s.items);
+  const [method, setMethod] = useState<"credit" | "debit">("credit");
+  const router = useRouter();
+  const addGame = useLibrary((s) => s.addGame);
+
+  const subtotal = items.reduce(
+    (acc, item) => acc + item.price * item.quantity,
+    0
+  );
+
+  const tax = subtotal * 0.12; 
+  const total = subtotal + tax;
+
+  const handlePlaceOrder = () => {
+    items.forEach((item) => {
+      addGame({
+        id: item.id,
+        title: item.title,
+        image: item.image,
+        price: item.price,
+        status: "installed",
+        lastPlayed: "Never",
+        acquiredAt: new Date().toISOString(),
+      });
+    });
+
+    router.push("/library");
+  };
+
+
 
   return (
     <div className="min-h-screen bg-black text-white px-10 py-20">
@@ -36,11 +67,57 @@ export default function CheckoutPage() {
 
           <Section title="Payment Method">
             <div className="space-y-6">
-              <div className="flex items-center gap-3">
-                <input type="radio" defaultChecked className="accent-green-500" />
-                <span className="text-zinc-300">Credit Card</span>
-              </div>
+              <div className="grid grid-cols-2 gap-4">
 
+                {/* CREDIT CARD */}
+                <button
+                  onClick={() => setMethod("credit")}
+                  className={`
+                    flex items-center gap-3 p-4 rounded-xl border transition
+                    ${method === "credit" 
+                      ? "border-green-400 text-green-400 bg-green-400/10" 
+                      : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}
+                  `}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <path d="M2 10h20" />
+                  </svg>
+
+                  <span className="font-semibold">Credit Card</span>
+                </button>
+
+                <button
+                  onClick={() => setMethod("debit")}
+                  className={`
+                    flex items-center gap-3 p-4 rounded-xl border transition
+                    ${method === "debit" 
+                      ? "border-green-400 text-green-400 bg-green-400/10" 
+                      : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}
+                  `}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <rect x="2" y="5" width="20" height="14" rx="2" />
+                    <path d="M2 10h20" />
+                  </svg>
+
+                  <span className="font-semibold">Debit Card</span>
+                </button>
+              </div>
               <Input label="Card Number" placeholder="0000 0000 0000 0000" />
 
               <div className="grid grid-cols-2 gap-6">
@@ -63,34 +140,28 @@ export default function CheckoutPage() {
           <h2 className="text-xl font-bold mb-6">Order Summary</h2>
 
           <div className="space-y-4 text-zinc-300">
-            <SummaryItem title="Halo Infinite" price="$59" />
-            <SummaryItem title="Cyberpunk 2077" price="$39" />
-          </div>
-
-          <div className="mt-8">
-            <label className="text-zinc-400 text-sm">Promo Code</label>
-            <div className="flex mt-2">
-              <input
-                value={promo}
-                onChange={(e) => setPromo(e.target.value)}
-                placeholder="Enter code"
-                className="bg-zinc-800 border border-zinc-700 rounded-l-lg px-3 py-2 w-full focus:outline-none"
+            {items.map((item) => (
+              <SummaryItem
+                key={item.id}
+                title={item.title}
+                quantity={item.quantity}
+                image={item.image}
+                price={
+                  <span className="text-green-400 font-semibold">
+                    ${ (item.price * item.quantity).toFixed(2) }
+                  </span>
+                }
               />
-              <button className="bg-green-500 text-black px-4 rounded-r-lg font-semibold hover:bg-green-400 transition">
-                Apply
-              </button>
-            </div>
+            ))}
           </div>
 
           <div className="mt-8 space-y-2 text-zinc-300">
-            <TotalRow label="Subtotal" value="$98" />
-            <TotalRow label="Tax" value="$2" />
-            <TotalRow label="Total" value="$100" />
-            <TotalRow label="Discount" value="- $22" highlight />
-            <TotalRow label="Final Total" value="$78" bold highlight />
+            <TotalRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+            <TotalRow label="Tax" value={`$${tax.toFixed(2)}`} />
+            <TotalRow label="Total" value={`$${total.toFixed(2)}`} bold highlight />
           </div>
 
-          <button className="w-full mt-8 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition">
+          <button onClick={handlePlaceOrder} className="w-full mt-8 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition">
             PLACE ORDER
           </button>
 
@@ -100,6 +171,7 @@ export default function CheckoutPage() {
             </a>
           </div>
         </div>
+
       </div>
     </div>
   );
@@ -114,7 +186,7 @@ type SectionProps = {
 function Section({ title, children }: SectionProps) {
   return (
     <div>
-      <h2 className="text-xl font-bold mb-4">{title}</h2>
+      <h2 className="border-l-4 border-[#3DFF6B] pl-6 text-xl font-bold mb-4">{title}</h2>
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6">
         {children}
       </div>
@@ -141,17 +213,31 @@ function Input({ label, placeholder }: InputProps) {
 
 type SummaryItemProps = {
   title: string;
-  price: string;
+  price: React.ReactNode;
+  image: string;
+  quantity: number;
 };
 
-function SummaryItem({ title, price }: SummaryItemProps) {
+
+function SummaryItem({ title, price, image, quantity }: SummaryItemProps) {
   return (
-    <div className="flex justify-between">
-      <span>{title}</span>
-      <span className="text-zinc-100">{price}</span>
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-lg overflow-hidden border border-zinc-700">
+          <img src={image} alt={title} className="w-full h-full object-cover" />
+        </div>
+
+        <div className="flex flex-col">
+          <span className="font-semibold text-white">{title}</span>
+          <span className="text-zinc-500 text-sm">Qty: {quantity}</span>
+        </div>
+      </div>
+
+      <span className="text-zinc-100 font-semibold">{price}</span>
     </div>
   );
 }
+
 
 type TotalRowProps = {
   label: string;
