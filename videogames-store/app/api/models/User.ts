@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export interface IUser extends Document {
   //id: string;
-  name: string;
+  //name: string;
   password: string;
   email: string;
   isAdmin: boolean;
@@ -18,7 +18,7 @@ const UserSchema = new Schema<IUser>({
   //     default: () => uuidv4(),
   //     unique: true,
   //   },
-  name: { type: String, required: true },
+  //name: { type: String, required: true },
   password: { type: String, required: true },
   email: { type: String, required: true },
   isAdmin: { type: Boolean, required: false },

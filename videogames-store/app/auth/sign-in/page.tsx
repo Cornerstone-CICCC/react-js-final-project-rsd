@@ -1,4 +1,35 @@
+"use client";
+
+import React, { useState } from "react";
+
+
 export default function SignInPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+
+    const res = await fetch("/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setError(data.error);
+      setLoading(false);
+      return;
+    }
+
+    window.location.href = "/";
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="w-full max-w-sm bg-zinc-900/60 backdrop-blur-xl p-10 rounded-xl border border-zinc-800 shadow-xl">
@@ -14,7 +45,7 @@ export default function SignInPage() {
           Sign in to access your library
         </p>
 
-        <form className="space-y-5">
+        <form className="space-y-5" onSubmit={handleSubmit}>
                     <div>
             <label className="text-zinc-400 text-sm">EMAIL ADDRESS</label>
 
@@ -38,6 +69,8 @@ export default function SignInPage() {
                 type="email"
                 placeholder="name@example.com"
                 className="w-full bg-transparent py-2 pl-10 pr-3 text-white placeholder-zinc-500 focus:outline-none"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
           </div>
@@ -66,6 +99,8 @@ export default function SignInPage() {
                 type="password"
                 placeholder="••••••••"
                 className="w-full bg-transparent py-2 pl-10 pr-10 text-white placeholder-zinc-500 focus:outline-none"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
 
               <button className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition">
@@ -89,7 +124,7 @@ export default function SignInPage() {
             type="submit"
             className="w-full bg-green-500 hover:bg-green-400 transition text-black font-semibold py-2 rounded-lg mt-4"
           >
-            SIGN IN →
+            {loading ? "SIGNING IN..." : "SIGN IN →"}
           </button>
         </form>
 

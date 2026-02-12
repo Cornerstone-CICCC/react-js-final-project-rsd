@@ -3,7 +3,7 @@ import { User } from "../models/User";
 import bcrypt from "bcrypt";
 
 export async function POST(req: NextRequest) {
-  const { username, email, password } = await req.json();
+  const { email, password } = await req.json();
 
   // DATABASE CHECKS
 
@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
   response.cookies.set({
     name: "user-login",
-    value: username,
+    value: user._id.toString(),
     httpOnly: true,
     maxAge: 10 * 60,
   });
