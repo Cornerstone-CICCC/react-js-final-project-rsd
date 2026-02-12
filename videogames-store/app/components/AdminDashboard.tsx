@@ -190,20 +190,17 @@ export default function AdminDashboard() {
       form.price.trim() === "" ? NaN : Number.parseFloat(form.price);
 
     if (!form.title.trim()) return showToast("Title is required ❗");
+    if (!form.description.trim()) return showToast("Description is required ❗");
     if (Number.isNaN(priceNum)) return showToast("Price is required ❗");
     if (!form.category.trim()) return showToast("Category is required ❗");
+    if (!form.mainImg.trim()) return showToast("Main image URL is required ❗");
 
-    // Mapeo a tu schema real (Game model)
-    // REQUIRED en schema: title, description, price, mainImg, category
     const payload = {
       title: form.title.trim(),
-      description: form.description.trim() || "", // si tu schema lo requiere, ponlo obligatorio en UI
+      description: form.description.trim(),
       price: priceNum,
-      mainImg: form.mainImg.trim() || "",
+      mainImg: form.mainImg.trim(),
       category: form.category.trim(),
-      // UI-only (si tu schema no lo contempla, no lo mandes)
-      // status: form.status,
-      // releaseDate: form.releaseDate,
     };
 
     try {
@@ -248,7 +245,6 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-black uppercase tracking-tight">
             Admin Catalog
           </h1>
-          
         </div>
 
         <div className="flex gap-3 w-full md:w-auto">
@@ -276,7 +272,9 @@ export default function AdminDashboard() {
       <section className="max-w-7xl mx-auto bg-[#111] border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-white/5 flex items-center justify-between">
           <p className="text-white/30 text-xs font-bold uppercase tracking-widest">
-            {loading ? "Loading..." : `Showing ${filteredGames.length} of ${games.length}`}
+            {loading
+              ? "Loading..."
+              : `Showing ${filteredGames.length} of ${games.length}`}
           </p>
         </div>
 
@@ -296,7 +294,10 @@ export default function AdminDashboard() {
                 <tr key={game._id} className="hover:bg-white/5 transition">
                   <td className="px-8 py-6 flex items-center gap-4">
                     <img
-                      src={game.mainImg || "https://via.placeholder.com/96x128?text=IMG"}
+                      src={
+                        game.mainImg ||
+                        "https://via.placeholder.com/96x128?text=IMG"
+                      }
                       alt={game.title}
                       className="w-12 h-16 object-cover rounded-xl border border-white/10"
                     />
@@ -304,9 +305,7 @@ export default function AdminDashboard() {
                       <p className="font-black uppercase italic text-white">
                         {game.title}
                       </p>
-                      <p className="text-[10px] text-white/20">
-                        ID: {game._id}
-                      </p>
+                      <p className="text-[10px] text-white/20">ID: {game._id}</p>
                     </div>
                   </td>
 
@@ -340,7 +339,10 @@ export default function AdminDashboard() {
 
               {!loading && filteredGames.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-8 py-16 text-center text-white/40">
+                  <td
+                    colSpan={4}
+                    className="px-8 py-16 text-center text-white/40"
+                  >
                     No games match your search.
                   </td>
                 </tr>
@@ -357,7 +359,10 @@ export default function AdminDashboard() {
               className="bg-white/5 border border-white/10 rounded-3xl p-5 flex gap-4"
             >
               <img
-                src={game.mainImg || "https://via.placeholder.com/96x128?text=IMG"}
+                src={
+                  game.mainImg ||
+                  "https://via.placeholder.com/96x128?text=IMG"
+                }
                 alt={game.title}
                 className="w-20 h-28 object-cover rounded-2xl"
               />
@@ -392,7 +397,7 @@ export default function AdminDashboard() {
       {/* ADD / EDIT MODAL */}
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-[220] flex items-start justify-center p-4">
+          <div className="fixed inset-0 z-[220] flex items-center justify-center p-4">
             <motion.div
               className="absolute inset-0 bg-black/80 backdrop-blur-lg"
               onClick={() => setIsModalOpen(false)}
@@ -402,144 +407,161 @@ export default function AdminDashboard() {
             />
 
             <motion.div
-              className="relative z-10 w-full max-w-xl mt-10 bg-[#111] border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
+              className="relative z-10 w-full max-w-xl bg-[#111] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[calc(100vh-2rem)]"
               initial={{ y: 12, opacity: 0, scale: 0.98 }}
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 12, opacity: 0, scale: 0.98 }}
             >
-              {/* Top bar */}
-              <div className="p-6 border-b border-white/10 flex items-center justify-between">
+              {/* Top bar (sticky) */}
+              <div className="p-6 border-b border-white/10 flex items-center justify-between bg-[#111]/80 backdrop-blur-xl sticky top-0 z-10">
                 <div>
                   <h2 className="text-xl font-black uppercase">
                     {editing ? "Edit Game" : "Add New Game"}
                   </h2>
-                  
                 </div>
 
                 <button
                   onClick={() => setIsModalOpen(false)}
                   className="w-10 h-10 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/40 hover:text-white"
                   title="Close"
+                  type="button"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Form body (scrollable) */}
-              <form
-                onSubmit={submitForm}
-                className="p-6 max-h-[85vh] overflow-y-auto"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Title */}
-                  <div className="md:col-span-2">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                      Title
-                    </label>
-                    <input
-                      value={form.title}
-                      onChange={(e) => setField("title", e.target.value)}
-                      placeholder="Halo Infinite"
-                      className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold italic"
-                    />
-                  </div>
-
-                  {/* Price (NO spinner, NO forced 0) */}
-                  <div>
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                      Price
-                    </label>
-                    <div className="mt-2 relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3DFF6B] font-black">
-                        $
-                      </span>
+              {/* Form split: scroll body + fixed footer */}
+              <form onSubmit={submitForm} className="flex flex-col min-h-0">
+                {/* Body (scroll) */}
+                <div className="p-6 overflow-y-auto min-h-0">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Title */}
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Title
+                      </label>
                       <input
-                        value={form.price}
-                        onChange={(e) => setField("price", sanitizePriceInput(e.target.value))}
-                        inputMode="decimal"
-                        placeholder="59.99"
-                        className="no-spin w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-9 pr-4 text-white outline-none focus:border-[#3DFF6B]/50 font-black"
+                        value={form.title}
+                        onChange={(e) => setField("title", e.target.value)}
+                        placeholder="Halo Infinite"
+                        className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold italic"
                       />
                     </div>
-                  </div>
 
-                  {/* Category */}
-                  <div>
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                      Category
-                    </label>
-                    <input
-                      value={form.category}
-                      onChange={(e) => setField("category", e.target.value)}
-                      placeholder="FPS"
-                      className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold uppercase"
-                    />
-                  </div>
+                    {/* Description */}
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Description
+                      </label>
+                      <textarea
+                        value={form.description}
+                        onChange={(e) => setField("description", e.target.value)}
+                        rows={4}
+                        placeholder="Short description of the game..."
+                        className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 text-sm resize-none"
+                      />
+                      <p className="mt-2 text-[10px] text-white/25 font-bold uppercase tracking-widest">
+                        Recommended: 1–3 lines for catalog
+                      </p>
+                    </div>
 
-                  {/* Main Image */}
-                  <div className="md:col-span-2">
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                      Main Image URL
-                    </label>
-                    <input
-                      value={form.mainImg}
-                      onChange={(e) => setField("mainImg", e.target.value)}
-                      placeholder="https://images.unsplash.com/..."
-                      className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 text-xs font-mono"
-                    />
-                  </div>
+                    {/* Price */}
+                    <div>
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Price
+                      </label>
+                      <div className="mt-2 relative">
+                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3DFF6B] font-black">
+                          $
+                        </span>
+                        <input
+                          value={form.price}
+                          onChange={(e) =>
+                            setField("price", sanitizePriceInput(e.target.value))
+                          }
+                          inputMode="decimal"
+                          placeholder="59.99"
+                          className="no-spin w-full bg-white/5 border border-white/10 rounded-2xl py-3 pl-9 pr-4 text-white outline-none focus:border-[#3DFF6B]/50 font-black"
+                        />
+                      </div>
+                    </div>
 
-                  {/* Release date (UI-only) */}
-                  <div>
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                      Release Date (UI)
-                    </label>
-                    <input
-                      type="date"
-                      value={form.releaseDate}
-                      onChange={(e) => setField("releaseDate", e.target.value)}
-                      className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold"
-                    />
-                  </div>
+                    {/* Category */}
+                    <div>
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Category
+                      </label>
+                      <input
+                        value={form.category}
+                        onChange={(e) => setField("category", e.target.value)}
+                        placeholder="FPS"
+                        className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold uppercase"
+                      />
+                    </div>
 
-                  {/* Status toggle (NO select dropdown bug) */}
-                  <div>
-                    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                      Status (UI)
-                    </label>
+                    {/* Main Image */}
+                    <div className="md:col-span-2">
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Main Image URL
+                      </label>
+                      <input
+                        value={form.mainImg}
+                        onChange={(e) => setField("mainImg", e.target.value)}
+                        placeholder="https://images.unsplash.com/..."
+                        className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 text-xs font-mono"
+                      />
+                    </div>
 
-                    <div className="mt-2 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setField("status", "Published")}
-                        className={`py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition ${
-                          form.status === "Published"
-                            ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
-                            : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
-                        }`}
-                      >
-                        Published
-                      </button>
+                    {/* Release date (UI-only) */}
+                    <div>
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Release Date (UI)
+                      </label>
+                      <input
+                        type="date"
+                        value={form.releaseDate}
+                        onChange={(e) => setField("releaseDate", e.target.value)}
+                        className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold"
+                      />
+                    </div>
 
-                      <button
-                        type="button"
-                        onClick={() => setField("status", "Draft")}
-                        className={`py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition ${
-                          form.status === "Draft"
-                            ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
-                            : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
-                        }`}
-                      >
-                        Draft
-                      </button>
+                    {/* Status (UI) */}
+                    <div>
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Status (UI)
+                      </label>
+
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setField("status", "Published")}
+                          className={`py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition ${
+                            form.status === "Published"
+                              ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
+                              : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
+                          }`}
+                        >
+                          Published
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setField("status", "Draft")}
+                          className={`py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition ${
+                            form.status === "Draft"
+                              ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
+                              : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
+                          }`}
+                        >
+                          Draft
+                        </button>
+                      </div>
                     </div>
                   </div>
-
-              
                 </div>
 
-                {/* Actions */}
-                <div className="mt-6 flex items-center justify-end gap-3">
+                {/* Footer (fixed) */}
+                <div className="p-6 border-t border-white/10 bg-[#111]/80 backdrop-blur-xl flex items-center justify-end gap-3">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
@@ -553,7 +575,11 @@ export default function AdminDashboard() {
                     type="submit"
                     className="h-11 px-6 rounded-2xl bg-[#3DFF6B] text-black font-black uppercase tracking-widest text-xs hover:bg-green-400 disabled:opacity-60"
                   >
-                    {isSaving ? "Saving..." : editing ? "Save Changes" : "Create Game"}
+                    {isSaving
+                      ? "Saving..."
+                      : editing
+                      ? "Save Changes"
+                      : "Create Game"}
                   </button>
                 </div>
               </form>
@@ -587,13 +613,15 @@ export default function AdminDashboard() {
               <h2 className="text-xl font-black uppercase mb-3">Delete game?</h2>
 
               <p className="text-white/30 text-xs font-bold uppercase tracking-widest mb-8">
-                Remove <span className="text-white">{gameToDelete?.title}</span> from catalog.
+                Remove <span className="text-white">{gameToDelete?.title}</span>{" "}
+                from catalog.
               </p>
 
               <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={() => setIsDeleteOpen(false)}
                   className="py-3 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase"
+                  type="button"
                 >
                   Cancel
                 </button>
@@ -601,6 +629,7 @@ export default function AdminDashboard() {
                 <button
                   onClick={confirmDelete}
                   className="py-3 rounded-2xl bg-red-500 text-xs font-black uppercase"
+                  type="button"
                 >
                   Delete
                 </button>
