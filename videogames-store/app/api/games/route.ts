@@ -1,27 +1,39 @@
 import { connectDB } from "@/app/api/lib/mongodb";
 import { Game } from "../models/Game";
 import { NextRequest, NextResponse } from "next/server";
-import { error } from "console";
 
 export async function GET() {
   await connectDB();
-  const games = await Game.find();
+  const games = await Game.find().sort({ createdAt: -1 });
   return NextResponse.json(games);
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const { gameInfo } = await req.json();
-    if (!gameInfo) {
-      return NextResponse.json(
-        { error: "game cannot be empty" },
-        { status: 400 },
-      );
-    }
     await connectDB();
-    const game = await Game.create({ ...gameInfo });
+
+    const body = await req.json();
+    const gameInfo = body?.gameInfo;
+
+    if (!gameInfo) {
+      return NextResponse.json({ error: "gameInfo is required" }, { status: 400 });
+    }
+
+    // Normalize releaseDate to avoid Mongoose CastError
+    const payload = {
+      ...gameInfo,
+      releaseDate: gameInfo.releaseDate
+        ? new Date(gameInfo.releaseDate)
+        : undefined,
+    };
+
+    const game = await Game.create(payload);
     return NextResponse.json(game, { status: 201 });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.error("POST /api/games error:", err); // <- mira esto en la terminal
+    return NextResponse.json(
+      { error: err?.message ?? "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
