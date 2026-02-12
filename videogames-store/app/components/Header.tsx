@@ -43,7 +43,7 @@ export default function Header() {
           <Link href="/" className="hover:text-white transition">Home</Link>
           <Link href="/wishlist" className="hover:text-white transition">Wishlist</Link>
           <Link href="/library" className="hover:text-white transition">Library</Link>
-          <Link href="/community" className="hover:text-white transition">Community</Link>
+          <Link href="/community" className="hover:text-white transition">Support</Link>
         </div>
 
         <div className="flex items-center gap-6">
