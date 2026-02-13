@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useToast } from "./store/toast";
 import { Game, useWishlist } from "./store/wishlist";
 import { useUser } from "./store/user";
+import { useCart } from "./store/cart";
 
 export default function Home() {
 
@@ -55,6 +56,15 @@ export default function Home() {
     loadWishlist();
   }, [user]);
 
+  const setUserCart = useCart((s) => s.setUser); 
+  useEffect(() => { 
+    if (!user?._id) return; 
+    const newKey = `cart-${user._id}`; 
+    useCart.persist.setOptions({ name: newKey });  
+    const saved = localStorage.getItem(newKey); 
+    if (saved) { useCart.setState(JSON.parse(saved).state); } 
+    setUserCart(user._id); 
+  }, [user]);
 
   async function handleAddToWishlist(game: Game) {
   if (!user?._id) {
