@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type CartItem = {
   id: string;
@@ -9,11 +10,16 @@ export type CartItem = {
 };
 
 type CartStore = {
+  userId: string | null;
   items: CartItem[];
   isOpen: boolean;
+
+  setUser: (id: string | null) => void;
+
   toggle: () => void;
   open: () => void;
   close: () => void;
+
   add: (item: CartItem) => void;
   remove: (id: string) => void;
   increase: (id: string) => void;
@@ -21,48 +27,62 @@ type CartStore = {
   clear: () => void;
 };
 
-export const useCart = create<CartStore>((set) => ({
-  items: [],
-  isOpen: false,
+export const useCart = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      userId: null,
+      items: [],
+      isOpen: false,
 
-  toggle: () => set((s) => ({ isOpen: !s.isOpen })),
-  open: () => set({ isOpen: true }),
-  close: () => set({ isOpen: false }),
+      setUser: (id) => set({ userId: id }),
 
-  add: (item) =>
-    set((state) => {
-      const exists = state.items.find((i) => i.id === item.id);
-      if (exists) {
-        return {
+      toggle: () => set((s) => ({ isOpen: !s.isOpen })),
+      open: () => set({ isOpen: true }),
+      close: () => set({ isOpen: false }),
+
+      add: (item) =>
+        set((state) => {
+          const exists = state.items.find((i) => i.id === item.id);
+          if (exists) {
+            return {
+              items: state.items.map((i) =>
+                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+              ),
+            };
+          }
+          return { items: [...state.items, { ...item, quantity: 1 }] };
+        }),
+
+      remove: (id) =>
+        set((state) => ({
+          items: state.items.filter((i) => i.id !== id),
+        })),
+
+      increase: (id) =>
+        set((state) => ({
           items: state.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+            i.id === id ? { ...i, quantity: i.quantity + 1 } : i
           ),
-        };
-      }
-      return { items: [...state.items, { ...item, quantity: 1 }] };
+        })),
+
+      decrease: (id) =>
+        set((state) => ({
+          items: state.items
+            .map((i) =>
+              i.id === id ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i
+            )
+            .filter((i) => i.quantity > 0),
+        })),
+
+      clear: () => set({ items: [] }),
     }),
 
-  remove: (id) =>
-    set((state) => ({
-      items: state.items.filter((i) => i.id !== id),
-    })),
-
-  increase: (id) =>
-    set((state) => ({
-      items: state.items.map((i) =>
-        i.id === id ? { ...i, quantity: i.quantity + 1 } : i
-      ),
-    })),
-
-  decrease: (id) =>
-    set((state) => ({
-      items: state.items
-        .map((i) =>
-          i.id === id ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i
-        )
-        .filter((i) => i.quantity > 0),
-    })),
-    clear: () => set({ items: [] }),
-  
-}));
-
+    {
+      name: "cart-storage", 
+      partialize: (state) => ({
+        userId: state.userId,
+        items: state.items,
+      }),
+    }
+  )
+);

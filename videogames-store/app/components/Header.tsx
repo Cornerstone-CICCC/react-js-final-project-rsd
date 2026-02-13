@@ -161,8 +161,17 @@ export default function Header() {
           )}
           </div>
 
+          <Link href="/wishlist">
+            <Heart
+              size={22}
+              className="
+                text-zinc-400 cursor-pointer transition 
+                hover:text-green-400 hover:scale-110
+                active:scale-95
+              "
+            />
+          </Link>
 
-          <Heart size={22} className="text-zinc-400 hover:text-white cursor-pointer transition" />
           <div className="relative cursor-pointer" onClick={openCart}>
           <ShoppingCart
             size={22}
