@@ -4,7 +4,7 @@ export type CartItem = {
   id: string;
   title: string;
   price: number;
-  image: string;
+  imageImg?: string;
   quantity: number;
 };
 
@@ -18,6 +18,7 @@ type CartStore = {
   remove: (id: string) => void;
   increase: (id: string) => void;
   decrease: (id: string) => void;
+  clear: () => void;
 };
 
 export const useCart = create<CartStore>((set) => ({
@@ -61,4 +62,7 @@ export const useCart = create<CartStore>((set) => ({
         )
         .filter((i) => i.quantity > 0),
     })),
+    clear: () => set({ items: [] }),
+  
 }));
+

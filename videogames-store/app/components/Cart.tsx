@@ -44,7 +44,7 @@ export default function Cart() {
             <div key={item.id} className="flex gap-4">
               <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-700">
                 <Image
-                  src={item.image}
+                  src={item.imageImg || "https://placehold.co/400x200/png"}
                   alt={item.title}
                   fill
                   className="object-cover"

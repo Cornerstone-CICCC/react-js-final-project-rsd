@@ -1,56 +1,131 @@
 "use client";
-
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "./store/toast";
-import { useWishlist } from "./store/wishlist";
+import { Game, useWishlist } from "./store/wishlist";
+import { useUser } from "./store/user";
 
 export default function Home() {
 
+  type Game = {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  mainImg?: string;
+  image?: string;
+};
+
   const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
-  const game = { id: "halo-infinite", title: "Halo Infinite", price: "$59.99", image: "https://placehold.co/800x400/png", }; 
-  const alreadyAdded = items.some((g) => g.id === game.id);
+  const [games, setGames] = useState<Game[]>([]);
   const showToast = useToast((state) => state.show);
-  
+  const user = useUser((s) => s.user);
+  const setWishlist = useWishlist((s) => s.setItems);
+
+
+
+  useEffect(() => {
+    async function loadGames() {
+      try {
+        const res = await fetch("/api/games");
+        const data = await res.json();
+        setGames(data);
+        console.log("Loaded games:", data);
+      } catch (error) {
+        console.error("Error loading games:", error);
+      }
+    }
+    loadGames();
+  }, []);
+
+    useEffect(() => {
+    async function loadWishlist() {
+      if (!user?._id) return;
+
+      const res = await fetch(`/api/wishlist?userId=${user._id}`);
+      const data = await res.json();
+      setWishlist(data);
+    }
+
+    loadWishlist();
+  }, [user]);
+
+
+  async function handleAddToWishlist(game: Game) {
+  if (!user?._id) {
+    showToast("You must be logged in");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/wishlist", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user._id,
+        gameId: game._id,
+      }),
+    });
+
+    const updatedWishlist = await res.json();
+
+    if (updatedWishlist.error) {
+      console.error(updatedWishlist.error);
+      showToast("Error adding to wishlist");
+      return;
+    }
+
+    setWishlist(updatedWishlist);
+    showToast("Added to wishlist ✓");
+  } catch (err) {
+    console.error(err);
+    showToast("Error adding to wishlist");
+  }
+}
+
+
+  const heroGame: Game | undefined = games[0];
+  const alreadyAdded = items.some((item) => item._id === heroGame?._id);
   return (
+    
     <main className="min-h-screen bg-black text-white">
 
       <section className="relative h-[500px] w-full">
         <Image
-          src="https://placehold.co/1600x500/png"
-          alt="Halo Infinite"
+          src={heroGame?.mainImg || "https://placehold.co/1200x500/png"}
+          alt={heroGame?.title || "Game Image"}
           fill
           className="object-cover opacity-60"
           unoptimized
         />
 
         <div className="absolute inset-0 flex flex-col justify-center px-16">
-          <h1 className="text-5xl font-extrabold mb-4">HALO INFINITE</h1>
+          <h1 className="text-5xl font-extrabold mb-4">{heroGame?.title}</h1>
           <p className="text-zinc-300 max-w-xl mb-6">
-            Experience the next chapter of Master Chief’s legendary saga.
+            {heroGame?.description}
           </p>
-
           <div className="flex gap-4">
-            <button className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition">
+            <button onClick={() => {
+              window.location.href = `/gamedetail/${heroGame?._id}`;
+            }} className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition">
               View More 
             </button>
 
              <button
-              onClick={() => {
-                addToWishlist(game);
-                showToast("Added to wishlist ✓");
-              }}
-              disabled={alreadyAdded}
-              className={`
-                px-6 py-3 rounded-lg border transition
-                ${alreadyAdded
-                  ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
-                  : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
-                }
-              `}
-            >
-              {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
-            </button>
+                onClick={() => handleAddToWishlist(heroGame!)}
+                disabled={alreadyAdded}
+                className={`
+                  px-6 py-3 rounded-lg border transition
+                  ${alreadyAdded
+                    ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
+                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                  }
+                `}
+              >
+                {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
+              </button>
+
           </div>
         </div>
       </section>
@@ -58,15 +133,15 @@ export default function Home() {
       <div className="px-16 py-12 space-y-16">
 
         <Section title={ <> Trending <span className="text-[#3DFF6B]">Now</span> </> }>
-          <GameGrid />
+          <GameGrid games={games} />
         </Section>
 
         <Section title={ <> Top <span className="text-[#3DFF6B]">Sellers</span> </> }>
-          <GameGrid />
+          <GameGrid games={games}/>
         </Section>
 
         <Section title={ <> New <span className="text-[#3DFF6B]">Releases</span> </> }>
-          <GameGrid />
+          <GameGrid games={games}/>
         </Section>
 
        <div className="relative w-full rounded-xl overflow-hidden 
@@ -123,25 +198,25 @@ function Section({ title, children }: SectionProps) {
   );
 }
 
-
-function GameGrid() {
-  const games = [
-    { id: 1, title: "Forza Horizon 5", price: "$59.99" },
-    { id: 2, title: "Cyberpunk 2077", price: "$49.99" },
-    { id: 3, title: "Elden Ring", price: "$59.99" },
-    { id: 4, title: "Starfield", price: "$69.99" },
-  ];
+function GameGrid({ games }: { games?: Game[] }) {
+  if (!games || games.length === 0) {
+    return (
+      <p className="text-zinc-500 text-lg">
+        No games available
+      </p>
+    );
+  }
 
   return (
     <div className="grid grid-cols-4 gap-6">
       {games.map((g) => (
         <Link
-          key={g.id}
-          href={`/gamedetail/${g.id}`}
+          key={g._id}
+          href={`/gamedetail/${g._id}`}
           className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:bg-zinc-800 transition"
         >
           <Image
-            src="https://placehold.co/300x200/png"
+            src={g.mainImg || g.image || "https://placehold.co/300x200/png"}
             alt={g.title}
             width={300}
             height={200}
@@ -150,9 +225,10 @@ function GameGrid() {
           />
 
           <h3 className="text-lg font-semibold">{g.title}</h3>
-          <p className="text-green-400 font-bold mt-1">{g.price}</p>
+          <p className="text-green-400 font-bold mt-1">${g.price}</p>
         </Link>
       ))}
     </div>
   );
 }
+
