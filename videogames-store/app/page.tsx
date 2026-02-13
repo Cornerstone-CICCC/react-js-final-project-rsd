@@ -22,6 +22,10 @@ export default function Home() {
   const showToast = useToast((state) => state.show);
   const user = useUser((s) => s.user);
   const setWishlist = useWishlist((s) => s.setItems);
+  const trendingGames = games.slice(0, 5); 
+  const topSellers = games.slice(5, 10); 
+  const newReleases = games.slice(10, 16); 
+
 
 
 
@@ -133,22 +137,22 @@ export default function Home() {
       <div className="px-16 py-12 space-y-16">
 
         <Section title={ <> Trending <span className="text-[#3DFF6B]">Now</span> </> }>
-          <GameGrid games={games} />
+          <GameGrid games={trendingGames} />
         </Section>
 
         <Section title={ <> Top <span className="text-[#3DFF6B]">Sellers</span> </> }>
-          <GameGrid games={games}/>
+          <GameGrid games={topSellers}/>
         </Section>
 
         <Section title={ <> New <span className="text-[#3DFF6B]">Releases</span> </> }>
-          <GameGrid games={games}/>
+          <GameGrid games={newReleases}/>
         </Section>
 
        <div className="relative w-full rounded-xl overflow-hidden 
                 bg-black border border-zinc-700 p-10">
 
           <img
-            src="https://placehold.co/1200x500/png"
+            src="/img_banner.jpg"
             alt="Gaming Promo"
             className="absolute inset-0 w-full h-full object-cover opacity-40"
           />
@@ -213,16 +217,18 @@ function GameGrid({ games }: { games?: Game[] }) {
         <Link
           key={g._id}
           href={`/gamedetail/${g._id}`}
-          className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:bg-zinc-800 transition"
+          className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:bg-zinc-800 transition"
         >
-          <Image
-            src={g.mainImg || g.image || "https://placehold.co/300x200/png"}
-            alt={g.title}
-            width={300}
-            height={200}
-            className="rounded-lg mb-4"
-            unoptimized
-          />
+          <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
+            <Image
+              src={g.mainImg || g.image || "https://placehold.co/300x200/png"}
+              alt={g.title}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
+
 
           <h3 className="text-lg font-semibold">{g.title}</h3>
           <p className="text-green-400 font-bold mt-1">${g.price}</p>

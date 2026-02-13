@@ -94,14 +94,13 @@ export default function GameDetail() {
     <div className="min-h-screen bg-black text-white px-10 py-20">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
         
-        {/* LEFT SIDE — IMAGES */}
         <div>
           <div className="relative w-full h-[400px] rounded-xl overflow-hidden border border-zinc-800">
             <Image
               src={game.mainImg || "https://placehold.co/800x400/png"}
               alt={game.title}
               fill
-              className="object-cover"
+              className="object-cover object-center"
               unoptimized
             />
           </div>

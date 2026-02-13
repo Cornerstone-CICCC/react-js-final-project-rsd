@@ -4,6 +4,7 @@ import { useWishlist } from "@/app/store/wishlist";
 import Image from "next/image";
 import { useUser } from "../store/user";
 import { useEffect } from "react";
+import Link from "next/link";
 
 export default function WishlistPage() {
   const user = useUser((s) => s.user);
@@ -23,7 +24,6 @@ export default function WishlistPage() {
     loadWishlist();
   }, [user]);
 
-  // Remove from wishlist (API + Zustand)
   async function handleRemove(gameId: string) {
     if (!user?._id) return;
 
@@ -50,22 +50,25 @@ export default function WishlistPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {items.map((game) => (
-          <div
-            key={game._id}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl p-4"
-          >
-            <div className="relative w-full h-40 rounded-lg overflow-hidden mb-4">
-              <Image
-                src={game.mainImg || game.image || "https://placehold.co/400x200/png"}
-                alt={game.title}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            </div>
+          <div key={game._id} className="flex flex-col">
+            
+            <Link
+              href={`/gamedetail/${game._id}`}
+              className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 hover:bg-zinc-800 transition block"
+            >
+              <div className="relative w-full h-40 rounded-lg overflow-hidden mb-4">
+                <Image
+                  src={game.mainImg || game.image || "https://placehold.co/400x200/png"}
+                  alt={game.title}
+                  fill
+                  className="object-cover"
+                  unoptimized
+                />
+              </div>
 
-            <h2 className="text-lg font-semibold">{game.title}</h2>
-            <p className="text-green-400 font-bold">${game.price}</p>
+              <h2 className="text-lg font-semibold">{game.title}</h2>
+              <p className="text-green-400 font-bold">${game.price}</p>
+            </Link>
 
             <button
               onClick={() => handleRemove(game._id)}
@@ -76,6 +79,7 @@ export default function WishlistPage() {
           </div>
         ))}
       </div>
+
     </div>
   );
 }
