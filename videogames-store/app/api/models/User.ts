@@ -3,8 +3,7 @@ import { unique } from "next/dist/build/utils";
 import { v4 as uuidv4 } from "uuid";
 
 export interface IUser extends Document {
-  //id: string;
-  //name: string;
+  id: string;
   password: string;
   email: string;
   isAdmin: boolean;
@@ -13,12 +12,11 @@ export interface IUser extends Document {
 }
 
 const UserSchema = new Schema<IUser>({
-  //   id: {
-  //     type: String,
-  //     default: () => uuidv4(),
-  //     unique: true,
-  //   },
-  //name: { type: String, required: true },
+  id:{
+       type: String,
+      default: () => uuidv4(),
+      unique: true,
+     },
   password: { type: String, required: true },
   email: { type: String, required: true },
   isAdmin: { type: Boolean, required: false },

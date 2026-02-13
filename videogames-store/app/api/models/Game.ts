@@ -2,6 +2,7 @@ import mongoose, { Model, Schema } from "mongoose";
 
 export interface IGame extends Document {
   _id: string;
+  id: string;
   title: string;
 
   // ✅ optional for MVP
@@ -25,6 +26,8 @@ export interface IGame extends Document {
 
 const GameSchema = new Schema<IGame>(
   {
+    id: { type: String, required: true, unique: true },
+
     title: { type: String, required: true },
 
     // ✅ MVP: allow empty description

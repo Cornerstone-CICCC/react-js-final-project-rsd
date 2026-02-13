@@ -5,6 +5,7 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import ToastContainer from "./components/ToastContainer";
 import Cart from "./components/Cart";
+import UserLoader from "./UserLoader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +35,7 @@ export default function RootLayout({
         <Header></Header>
         <ToastContainer></ToastContainer>
         <Cart></Cart>
+        <UserLoader></UserLoader>
         {children}
         <Footer></Footer>
       </body>
