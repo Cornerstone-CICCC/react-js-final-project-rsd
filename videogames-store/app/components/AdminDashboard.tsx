@@ -14,18 +14,28 @@ type GameUI = {
   price: number;
   mainImg: string;
   category: string;
-  status: Status; // UI-only (si tu schema no lo tiene, lo guardamos solo en el front)
-  releaseDate?: string; // UI-only (si tu schema no lo tiene)
+
+  // UI-only
+  status: Status;
+
+  // ✅ NOW real DB fields (safe optional)
+  releaseDate?: string; // "YYYY-MM-DD"
+  isTrending?: boolean;
 };
 
 type GameForm = {
   title: string;
   description: string;
-  price: string; // string para permitir vacío y evitar el "0" forzado
+  price: string;
   category: string;
   mainImg: string;
+
+  // UI-only
   status: Status;
-  releaseDate: string;
+
+  // ✅ metadata for storefront
+  releaseDate: string; // "YYYY-MM-DD"
+  isTrending: boolean;
 };
 
 const emptyForm: GameForm = {
@@ -36,7 +46,27 @@ const emptyForm: GameForm = {
   mainImg: "",
   status: "Published",
   releaseDate: "",
+  isTrending: false,
 };
+
+function toDateInputValue(v?: string | Date | null) {
+  if (!v) return "";
+  const d = typeof v === "string" ? new Date(v) : v;
+  if (Number.isNaN(d.getTime())) return "";
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function isNewRelease(releaseDate?: string) {
+  if (!releaseDate) return false;
+  const d = new Date(releaseDate);
+  if (Number.isNaN(d.getTime())) return false;
+  const now = new Date();
+  const diffDays = (now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24);
+  return diffDays >= 0 && diffDays <= 30; // last 30 days
+}
 
 export default function AdminDashboard() {
   const showToast = useToast((s) => s.show);
@@ -63,7 +93,9 @@ export default function AdminDashboard() {
       return (
         g.title.toLowerCase().includes(q) ||
         g.category.toLowerCase().includes(q) ||
-        g.status.toLowerCase().includes(q)
+        g.status.toLowerCase().includes(q) ||
+        (g.isTrending ? "trending".includes(q) : false) ||
+        (g.releaseDate ? "new".includes(q) : false)
       );
     });
   }, [games, query]);
@@ -75,7 +107,6 @@ export default function AdminDashboard() {
       const res = await fetch("/api/games", { cache: "no-store" });
       const data = await res.json();
 
-      // Normalizamos al shape del UI
       const mapped: GameUI[] = (Array.isArray(data) ? data : []).map((g) => ({
         _id: g._id,
         title: g.title ?? "",
@@ -83,12 +114,13 @@ export default function AdminDashboard() {
         price: Number(g.price ?? 0),
         mainImg: g.mainImg ?? "",
         category: g.category ?? "FPS",
-        status: (g.status as Status) ?? "Published", // si no existe en DB, cae a Published
-        releaseDate: g.releaseDate ?? "",
+        status: (g.status as Status) ?? "Published",
+        releaseDate: toDateInputValue(g.releaseDate),
+        isTrending: Boolean(g.isTrending),
       }));
 
       setGames(mapped);
-    } catch (e: any) {
+    } catch {
       showToast("Error loading games ❌");
     } finally {
       setLoading(false);
@@ -148,6 +180,7 @@ export default function AdminDashboard() {
       mainImg: game.mainImg ?? "",
       status: game.status ?? "Published",
       releaseDate: game.releaseDate ?? "",
+      isTrending: Boolean(game.isTrending),
     });
     setIsModalOpen(true);
   }
@@ -175,7 +208,6 @@ export default function AdminDashboard() {
   }
 
   function sanitizePriceInput(v: string) {
-    // permite vacío; números y un solo punto decimal
     const cleaned = v.replace(/[^\d.]/g, "");
     const parts = cleaned.split(".");
     if (parts.length <= 2) return cleaned;
@@ -195,13 +227,16 @@ export default function AdminDashboard() {
     if (!form.category.trim()) return showToast("Category is required ❗");
     if (!form.mainImg.trim()) return showToast("Main image URL is required ❗");
 
-    const payload = {
+    const payload: Partial<GameUI> = {
       title: form.title.trim(),
       description: form.description.trim(),
       price: priceNum,
       mainImg: form.mainImg.trim(),
-      category: form.category.trim(),
+      category: form.category.trim(),    
+      releaseDate: form.releaseDate || undefined,
+      isTrending: form.isTrending,
     };
+    
 
     try {
       setIsSaving(true);
@@ -227,7 +262,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-white px-6 pb-10 pt-24 md:pt-28">
-      {/* Remove number spinners only where we use .no-spin */}
       <style jsx global>{`
         input.no-spin::-webkit-outer-spin-button,
         input.no-spin::-webkit-inner-spin-button {
@@ -245,6 +279,9 @@ export default function AdminDashboard() {
           <h1 className="text-3xl font-black uppercase tracking-tight">
             Admin Catalog
           </h1>
+          <p className="mt-2 text-white/30 text-xs font-bold uppercase tracking-widest">
+            Manage games + storefront metadata (Trending / Release Date)
+          </p>
         </div>
 
         <div className="flex gap-3 w-full md:w-auto">
@@ -290,52 +327,80 @@ export default function AdminDashboard() {
             </thead>
 
             <tbody className="divide-y divide-white/5">
-              {filteredGames.map((game) => (
-                <tr key={game._id} className="hover:bg-white/5 transition">
-                  <td className="px-8 py-6 flex items-center gap-4">
-                    <img
-                      src={
-                        game.mainImg ||
-                        "https://via.placeholder.com/96x128?text=IMG"
-                      }
-                      alt={game.title}
-                      className="w-12 h-16 object-cover rounded-xl border border-white/10"
-                    />
-                    <div>
-                      <p className="font-black uppercase italic text-white">
-                        {game.title}
-                      </p>
-                      <p className="text-[10px] text-white/20">ID: {game._id}</p>
-                    </div>
-                  </td>
+              {filteredGames.map((game) => {
+                const newBadge = isNewRelease(game.releaseDate);
+                const trendingBadge = Boolean(game.isTrending);
 
-                  <td className="px-8 py-6 text-white/50 font-bold">
-                    {game.category}
-                  </td>
+                return (
+                  <tr key={game._id} className="hover:bg-white/5 transition">
+                    <td className="px-8 py-6 flex items-center gap-4">
+                      <img
+                        src={
+                          game.mainImg ||
+                          "https://via.placeholder.com/96x128?text=IMG"
+                        }
+                        alt={game.title}
+                        className="w-12 h-16 object-cover rounded-xl border border-white/10"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-black uppercase italic text-white">
+                            {game.title}
+                          </p>
 
-                  <td className="px-8 py-6 font-black text-[#3DFF6B]">
-                    ${game.price?.toFixed?.(2) ?? game.price}
-                  </td>
+                          {trendingBadge && (
+                            <span className="px-2 py-1 rounded-full bg-[#3DFF6B] text-black text-[9px] font-black uppercase tracking-widest">
+                              Trending
+                            </span>
+                          )}
 
-                  <td className="px-8 py-6 flex justify-end gap-3">
-                    <button
-                      onClick={() => openEdit(game)}
-                      className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-[#3DFF6B]/40"
-                      title="Edit"
-                    >
-                      <Edit2 className="w-4 h-4 text-white/40" />
-                    </button>
+                          {newBadge && (
+                            <span className="px-2 py-1 rounded-full bg-white/10 border border-white/15 text-white text-[9px] font-black uppercase tracking-widest">
+                              New
+                            </span>
+                          )}
+                        </div>
 
-                    <button
-                      onClick={() => handleDeleteClick(game)}
-                      className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-red-500/40"
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4 text-red-400" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                        <p className="text-[10px] text-white/20 truncate max-w-[520px]">
+                          {game.description || "—"}
+                        </p>
+
+                        <p className="text-[10px] text-white/20">
+                          ID: {game._id}
+                        </p>
+                      </div>
+                    </td>
+
+                    <td className="px-8 py-6 text-white/50 font-bold">
+                      {game.category}
+                    </td>
+
+                    <td className="px-8 py-6 font-black text-[#3DFF6B]">
+                      ${game.price?.toFixed?.(2) ?? game.price}
+                    </td>
+
+                    <td className="px-8 py-6 flex justify-end gap-3">
+                      <button
+                        onClick={() => openEdit(game)}
+                        className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-[#3DFF6B]/40"
+                        title="Edit"
+                        type="button"
+                      >
+                        <Edit2 className="w-4 h-4 text-white/40" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteClick(game)}
+                        className="p-3 rounded-2xl bg-white/5 border border-white/10 hover:border-red-500/40"
+                        title="Delete"
+                        type="button"
+                      >
+                        <Trash2 className="w-4 h-4 text-red-400" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
 
               {!loading && filteredGames.length === 0 && (
                 <tr>
@@ -353,44 +418,67 @@ export default function AdminDashboard() {
 
         {/* Mobile Cards */}
         <div className="lg:hidden p-6 grid gap-4">
-          {filteredGames.map((game) => (
-            <div
-              key={game._id}
-              className="bg-white/5 border border-white/10 rounded-3xl p-5 flex gap-4"
-            >
-              <img
-                src={
-                  game.mainImg ||
-                  "https://via.placeholder.com/96x128?text=IMG"
-                }
-                alt={game.title}
-                className="w-20 h-28 object-cover rounded-2xl"
-              />
+          {filteredGames.map((game) => {
+            const newBadge = isNewRelease(game.releaseDate);
+            const trendingBadge = Boolean(game.isTrending);
 
-              <div className="flex-1">
-                <h3 className="font-black uppercase italic">{game.title}</h3>
-                <p className="text-white/40 text-sm">{game.category}</p>
-                <p className="text-[#3DFF6B] font-black mt-2">
-                  ${game.price?.toFixed?.(2) ?? game.price}
-                </p>
+            return (
+              <div
+                key={game._id}
+                className="bg-white/5 border border-white/10 rounded-3xl p-5 flex gap-4"
+              >
+                <img
+                  src={
+                    game.mainImg || "https://via.placeholder.com/96x128?text=IMG"
+                  }
+                  alt={game.title}
+                  className="w-20 h-28 object-cover rounded-2xl"
+                />
 
-                <div className="flex gap-3 mt-3">
-                  <button
-                    onClick={() => openEdit(game)}
-                    className="text-xs text-white/40 hover:text-white"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteClick(game)}
-                    className="text-xs text-red-400 hover:text-red-300"
-                  >
-                    Delete
-                  </button>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="font-black uppercase italic">{game.title}</h3>
+                    {trendingBadge && (
+                      <span className="px-2 py-1 rounded-full bg-[#3DFF6B] text-black text-[9px] font-black uppercase tracking-widest">
+                        Trending
+                      </span>
+                    )}
+                    {newBadge && (
+                      <span className="px-2 py-1 rounded-full bg-white/10 border border-white/15 text-white text-[9px] font-black uppercase tracking-widest">
+                        New
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-white/40 text-sm">{game.category}</p>
+                  <p className="text-white/40 text-xs line-clamp-2 mt-1">
+                    {game.description || "—"}
+                  </p>
+
+                  <p className="text-[#3DFF6B] font-black mt-2">
+                    ${game.price?.toFixed?.(2) ?? game.price}
+                  </p>
+
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={() => openEdit(game)}
+                      className="text-xs text-white/40 hover:text-white"
+                      type="button"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(game)}
+                      className="text-xs text-red-400 hover:text-red-300"
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
 
@@ -418,6 +506,9 @@ export default function AdminDashboard() {
                   <h2 className="text-xl font-black uppercase">
                     {editing ? "Edit Game" : "Add New Game"}
                   </h2>
+                  <p className="mt-2 text-[10px] text-white/25 font-bold uppercase tracking-widest">
+                    Includes storefront metadata (Trending / Release Date)
+                  </p>
                 </div>
 
                 <button
@@ -430,7 +521,6 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              {/* Form split: scroll body + fixed footer */}
               <form onSubmit={submitForm} className="flex flex-col min-h-0">
                 {/* Body (scroll) */}
                 <div className="p-6 overflow-y-auto min-h-0">
@@ -512,10 +602,10 @@ export default function AdminDashboard() {
                       />
                     </div>
 
-                    {/* Release date (UI-only) */}
+                    {/* Release date */}
                     <div>
                       <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
-                        Release Date (UI)
+                        Release Date
                       </label>
                       <input
                         type="date"
@@ -523,10 +613,46 @@ export default function AdminDashboard() {
                         onChange={(e) => setField("releaseDate", e.target.value)}
                         className="mt-2 w-full bg-white/5 border border-white/10 rounded-2xl py-3 px-4 text-white outline-none focus:border-[#3DFF6B]/50 font-bold"
                       />
+                      <p className="mt-2 text-[10px] text-white/25 font-bold uppercase tracking-widest">
+                        Used for “New Releases”
+                      </p>
+                    </div>
+
+                    {/* Trending toggle */}
+                    <div>
+                      <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
+                        Trending
+                      </label>
+
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setField("isTrending", true)}
+                          className={`py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition ${
+                            form.isTrending
+                              ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
+                              : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
+                          }`}
+                        >
+                          Trending
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setField("isTrending", false)}
+                          className={`py-3 rounded-2xl border text-xs font-black uppercase tracking-widest transition ${
+                            !form.isTrending
+                              ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
+                              : "bg-white/5 text-white/60 border-white/10 hover:border-white/20"
+                          }`}
+                        >
+                          Normal
+                        </button>
+                      </div>
                     </div>
 
                     {/* Status (UI) */}
-                    <div>
+                    <div className="md:col-span-2">
                       <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">
                         Status (UI)
                       </label>
