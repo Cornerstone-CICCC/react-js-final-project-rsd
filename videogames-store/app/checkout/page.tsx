@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useCart } from "@/app/store/cart";
 import { useRouter } from "next/navigation";
-import { useLibrary } from "../store/library";  
+import { useLibrary } from "../store/library";
 import { useUser } from "@/app/store/user";
-import { useToast } from "@/app/store/toast"; 
+import { useToast } from "@/app/store/toast";
 
 export default function CheckoutPage() {
   const items = useCart((s) => s.items);
@@ -15,39 +15,65 @@ export default function CheckoutPage() {
 
   const subtotal = items.reduce(
     (acc, item) => acc + item.price * item.quantity,
-    0
+    0,
   );
 
-  const tax = subtotal * 0.12; 
+  const tax = subtotal * 0.12;
   const total = subtotal + tax;
 
   const user = useUser((s) => s.user);
   const showToast = useToast((s) => s.show);
 
-const handlePlaceOrder = async () => {
-  if (!user) {
-    showToast("You must be logged in to checkout");
-    return;
-  }
+  const handlePlaceOrder = async () => {
+    if (!user) {
+      showToast("You must be logged in to checkout");
+      return;
+    }
 
-  for (const item of items) {
-    await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: user._id,
-        gameId: item.id,
+    const cartItemsForStripe = [];
+
+    for (const item of items) {
+      // await fetch("/api/checkout", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({
+      //     userId: user._id,
+      //     gameId: item.id,
+      //     price: item.price,
+      //   }),
+      // });
+      cartItemsForStripe.push({
+        id: item.id,
+        title: item.title,
         price: item.price,
-      }),
-    });
-  }
+        quantity: item.quantity,
+      });
+    }
 
-  useCart.getState().clear();
-  router.push("/library");
-};
+    try {
+      const response = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id,
+          cartItems: cartItemsForStripe,
+        }),
+      });
 
+      const data = await response.json();
 
-
+      if (data.url) {
+        window.location.href = data.url;
+        // useCart.getState().clear();
+        // router.push("/library");
+      } else {
+        throw new Error(data.error || "Failed to create checkout session");
+      }
+    } catch (error) {
+      console.error("Stripe Redirect Error:", error);
+      showToast("An error occurred while redirecting to the payment page.");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white px-10 py-20">
@@ -60,9 +86,7 @@ const handlePlaceOrder = async () => {
       </div>
 
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-        
         <div className="lg:col-span-2 space-y-12">
-
           <Section title="Contact Information">
             <Input label="Email Address" placeholder="name@example.com" />
           </Section>
@@ -80,15 +104,16 @@ const handlePlaceOrder = async () => {
           <Section title="Payment Method">
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-
                 {/* CREDIT CARD */}
                 <button
                   onClick={() => setMethod("credit")}
                   className={`
                     flex items-center gap-3 p-4 rounded-xl border transition
-                    ${method === "credit" 
-                      ? "border-green-400 text-green-400 bg-green-400/10" 
-                      : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}
+                    ${
+                      method === "credit"
+                        ? "border-green-400 text-green-400 bg-green-400/10"
+                        : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    }
                   `}
                 >
                   <svg
@@ -110,9 +135,11 @@ const handlePlaceOrder = async () => {
                   onClick={() => setMethod("debit")}
                   className={`
                     flex items-center gap-3 p-4 rounded-xl border transition
-                    ${method === "debit" 
-                      ? "border-green-400 text-green-400 bg-green-400/10" 
-                      : "border-zinc-700 text-zinc-400 hover:border-zinc-500"}
+                    ${
+                      method === "debit"
+                        ? "border-green-400 text-green-400 bg-green-400/10"
+                        : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                    }
                   `}
                 >
                   <svg
@@ -141,11 +168,12 @@ const handlePlaceOrder = async () => {
 
               <div className="flex items-center gap-3 mt-2">
                 <input type="checkbox" className="accent-green-500" />
-                <span className="text-zinc-400">Save this card for next time</span>
+                <span className="text-zinc-400">
+                  Save this card for next time
+                </span>
               </div>
             </div>
           </Section>
-
         </div>
 
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-8 h-fit">
@@ -160,7 +188,7 @@ const handlePlaceOrder = async () => {
                 image={item.imageImg || "https://placehold.co/400x200/png"}
                 price={
                   <span className="text-green-400 font-semibold">
-                    ${ (item.price * item.quantity).toFixed(2) }
+                    ${(item.price * item.quantity).toFixed(2)}
                   </span>
                 }
               />
@@ -170,25 +198,34 @@ const handlePlaceOrder = async () => {
           <div className="mt-8 space-y-2 text-zinc-300">
             <TotalRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
             <TotalRow label="Tax" value={`$${tax.toFixed(2)}`} />
-            <TotalRow label="Total" value={`$${total.toFixed(2)}`} bold highlight />
+            <TotalRow
+              label="Total"
+              value={`$${total.toFixed(2)}`}
+              bold
+              highlight
+            />
           </div>
 
-          <button onClick={handlePlaceOrder} className="w-full mt-8 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition">
+          <button
+            onClick={handlePlaceOrder}
+            className="w-full mt-8 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition"
+          >
             PLACE ORDER
           </button>
 
           <div className="text-center mt-6">
-            <a href="/cart" className="text-zinc-400 hover:text-white transition">
+            <a
+              href="/cart"
+              className="text-zinc-400 hover:text-white transition"
+            >
               RETURN TO CART
             </a>
           </div>
         </div>
-
       </div>
     </div>
   );
 }
-
 
 type SectionProps = {
   title: string;
@@ -198,7 +235,9 @@ type SectionProps = {
 function Section({ title, children }: SectionProps) {
   return (
     <div>
-      <h2 className="border-l-4 border-[#3DFF6B] pl-6 text-xl font-bold mb-4">{title}</h2>
+      <h2 className="border-l-4 border-[#3DFF6B] pl-6 text-xl font-bold mb-4">
+        {title}
+      </h2>
       <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6">
         {children}
       </div>
@@ -230,7 +269,6 @@ type SummaryItemProps = {
   quantity: number;
 };
 
-
 function SummaryItem({ title, price, image, quantity }: SummaryItemProps) {
   return (
     <div className="flex items-center justify-between">
@@ -249,7 +287,6 @@ function SummaryItem({ title, price, image, quantity }: SummaryItemProps) {
     </div>
   );
 }
-
 
 type TotalRowProps = {
   label: string;
