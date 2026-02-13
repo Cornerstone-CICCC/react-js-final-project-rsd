@@ -1,12 +1,12 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useWishlist } from "@/app/store/wishlist";
 import { useToast } from "@/app/store/toast";
 import { useCart } from "@/app/store/cart";
 import { useParams } from "next/navigation";
-
+import { useUser } from "@/app/store/user";
 
 type Game = {
   _id: string;
@@ -17,22 +17,24 @@ type Game = {
   images?: string[];
 };
 
-export default function GameDetail({ params }: { params: { id: string } }) {
+export default function GameDetail() {
   const { id } = useParams();
+  const user = useUser((s) => s.user);
 
   const [game, setGame] = useState<Game | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const addToWishlist = useWishlist((s) => s.addToWishlist);
   const wishlistItems = useWishlist((s) => s.items);
-  const showToast = useToast((s) => s.show);
+  const setWishlist = useWishlist((s) => s.setItems);
 
+  const showToast = useToast((s) => s.show);
   const addToCart = useCart((s) => s.add);
   const openCart = useCart((s) => s.open);
 
   const alreadyAdded = wishlistItems.some((g) => g._id === game?._id);
 
-  useEffect(() => {
+  // Load game
+ useEffect(() => {
     async function loadGame() {
       try {
         const res = await fetch(`/api/games/${id}`);
@@ -48,12 +50,48 @@ export default function GameDetail({ params }: { params: { id: string } }) {
     loadGame();
   }, [id]);
 
+  async function handleAddToWishlist() {
+    if (!user?._id) {
+      showToast("You must be logged in");
+      return;
+    }
+
+    if (!game?._id) {
+      showToast("Game not loaded yet");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/wishlist", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id,
+          gameId: game._id,
+        }),
+      });
+
+      const updatedWishlist = await res.json();
+
+      if (updatedWishlist.error) {
+        console.error(updatedWishlist.error);
+        showToast("Error adding to wishlist");
+        return;
+      }
+
+      setWishlist(updatedWishlist);
+      showToast("Added to wishlist ✓");
+    } catch (err) {
+      console.error(err);
+      showToast("Error adding to wishlist");
+    }
+  }
+
   if (loading) return <p className="text-white p-10">Loading...</p>;
   if (!game) return <p className="text-white p-10">Game not found</p>;
 
   return (
     <div className="min-h-screen bg-black text-white px-10 py-20">
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
         
         {/* LEFT SIDE — IMAGES */}
@@ -75,7 +113,6 @@ export default function GameDetail({ params }: { params: { id: string } }) {
           </div>
         </div>
 
-        {/* RIGHT SIDE — INFO */}
         <div className="space-y-6">
           <h1 className="text-4xl font-extrabold">{game.title}</h1>
 
@@ -102,10 +139,7 @@ export default function GameDetail({ params }: { params: { id: string } }) {
             </button>
 
             <button
-              onClick={() => {
-                addToWishlist(game);
-                showToast("Added to wishlist ✓");
-              }}
+              onClick={handleAddToWishlist}
               disabled={alreadyAdded}
               className={`
                 px-6 py-3 rounded-lg border transition

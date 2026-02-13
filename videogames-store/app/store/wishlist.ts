@@ -15,6 +15,7 @@ type WishlistStore = {
   addToWishlist: (game: Game) => void;
   removeFromWishlist: (id: string) => void;
   has: (id: string) => boolean;
+  setItems: (items: Game[]) => void;
 };
 
 export const useWishlist = create<WishlistStore>((set, get) => ({
@@ -32,4 +33,5 @@ export const useWishlist = create<WishlistStore>((set, get) => ({
     })),
 
   has: (id) => get().items.some((g) => g._id === id),
+  setItems: (items) => set({ items }),
 }));

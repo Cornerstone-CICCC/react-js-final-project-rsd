@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useToast } from "./store/toast";
 import { Game, useWishlist } from "./store/wishlist";
+import { useUser } from "./store/user";
 
 export default function Home() {
 
@@ -19,6 +20,9 @@ export default function Home() {
   const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
   const [games, setGames] = useState<Game[]>([]);
   const showToast = useToast((state) => state.show);
+  const user = useUser((s) => s.user);
+  const setWishlist = useWishlist((s) => s.setItems);
+
 
 
   useEffect(() => {
@@ -34,6 +38,52 @@ export default function Home() {
     }
     loadGames();
   }, []);
+
+    useEffect(() => {
+    async function loadWishlist() {
+      if (!user?._id) return;
+
+      const res = await fetch(`/api/wishlist?userId=${user._id}`);
+      const data = await res.json();
+      setWishlist(data);
+    }
+
+    loadWishlist();
+  }, [user]);
+
+
+  async function handleAddToWishlist(game: Game) {
+  if (!user?._id) {
+    showToast("You must be logged in");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/wishlist", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user._id,
+        gameId: game._id,
+      }),
+    });
+
+    const updatedWishlist = await res.json();
+
+    if (updatedWishlist.error) {
+      console.error(updatedWishlist.error);
+      showToast("Error adding to wishlist");
+      return;
+    }
+
+    setWishlist(updatedWishlist);
+    showToast("Added to wishlist ✓");
+  } catch (err) {
+    console.error(err);
+    showToast("Error adding to wishlist");
+  }
+}
+
 
   const heroGame: Game | undefined = games[0];
   const alreadyAdded = items.some((item) => item._id === heroGame?._id);
@@ -63,21 +113,19 @@ export default function Home() {
             </button>
 
              <button
-              onClick={() => {
-                addToWishlist(heroGame);
-                showToast("Added to wishlist ✓");
-              }}
-              disabled={alreadyAdded}
-              className={`
-                px-6 py-3 rounded-lg border transition
-                ${alreadyAdded
-                  ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
-                  : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
-                }
-              `}
-            >
-              {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
-            </button>
+                onClick={() => handleAddToWishlist(heroGame!)}
+                disabled={alreadyAdded}
+                className={`
+                  px-6 py-3 rounded-lg border transition
+                  ${alreadyAdded
+                    ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
+                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+                  }
+                `}
+              >
+                {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
+              </button>
+
           </div>
         </div>
       </section>
