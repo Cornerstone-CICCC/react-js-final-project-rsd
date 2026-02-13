@@ -1,11 +1,14 @@
 import { create } from "zustand";
 
 export type Game = {
-  id: string;
+  _id: string;
   title: string;
-  price: string;
-  image: string;
+  price: number;   
+  mainImg?: string;
+  image?: string;
+  description?: string;
 };
+
 
 type WishlistStore = {
   items: Game[];
@@ -18,15 +21,15 @@ export const useWishlist = create<WishlistStore>((set, get) => ({
   items: [],
 
   addToWishlist: (game) => {
-    const exists = get().items.some((g) => g.id === game.id);
+    const exists = get().items.some((g) => g._id === game._id);
     if (exists) return;
     set({ items: [...get().items, game] });
   },
 
   removeFromWishlist: (id) =>
     set((state) => ({
-      items: state.items.filter((g) => g.id !== id),
+      items: state.items.filter((g) => g._id !== id),
     })),
 
-  has: (id) => get().items.some((g) => g.id === id),
+  has: (id) => get().items.some((g) => g._id === id),
 }));

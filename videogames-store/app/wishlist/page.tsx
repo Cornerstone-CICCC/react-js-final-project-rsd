@@ -18,12 +18,12 @@ export default function WishlistPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         {items.map((game) => (
           <div
-            key={game.id}
+            key={game._id}
             className="bg-zinc-900 border border-zinc-800 rounded-xl p-4"
           >
             <div className="relative w-full h-40 rounded-lg overflow-hidden mb-4">
               <Image
-                src={game.image}
+                src={game.mainImg || game.image || "https://placehold.co/400x200/png"}
                 alt={game.title}
                 fill
                 className="object-cover"
@@ -35,7 +35,7 @@ export default function WishlistPage() {
             <p className="text-green-400 font-bold">{game.price}</p>
 
             <button
-              onClick={() => remove(game.id)}
+              onClick={() => remove(game._id)}
               className="mt-4 w-full bg-red-500/20 border border-red-500 text-red-400 py-2 rounded-lg hover:bg-red-500/30 transition"
             >
               Remove

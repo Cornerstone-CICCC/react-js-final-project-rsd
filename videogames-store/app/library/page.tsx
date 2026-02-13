@@ -1,9 +1,29 @@
 "use client";
 
+import { useEffect } from "react";
 import { useLibrary } from "@/app/store/library";
+import { useUser } from "@/app/store/user";
 
 export default function Library() {
+  const user = useUser((s) => s.user);
   const games = useLibrary((s) => s.games);
+  const setGames = useLibrary((s) => s.setGames);
+
+  useEffect(() => {
+    if (!user) return;
+
+    async function loadLibrary() {
+      try {
+        const res = await fetch(`/api/user/${user?._id}/library`);
+        const data = await res.json();
+        setGames(data.games || []);
+      } catch (err) {
+        console.error("Error loading library:", err);
+      }
+    }
+
+    loadLibrary();
+  }, [user, setGames]);
 
   return (
     <div className="min-h-screen bg-black text-white px-10 py-20">
@@ -27,41 +47,28 @@ export default function Library() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {games.map((game) => (
           <div
-            key={game.id}
+            key={game._id}
             className="relative bg-zinc-900/60 border border-zinc-800 rounded-xl overflow-hidden group"
           >
             <img
-              src={game.image}
+              src={game.mainImg}
               className="w-full h-48 object-cover opacity-90 group-hover:opacity-100 transition"
             />
 
             <span
               className={`
                 absolute top-3 right-3 px-3 py-1 text-xs font-semibold rounded-md
-                ${
-                  game.status === "installed" &&
-                  "bg-green-500/20 text-green-400 border border-green-500/30"
-                }
-                ${
-                  game.status === "update" &&
-                  "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                }
-                ${
-                  game.status === "not_installed" &&
-                  "bg-red-500/20 text-red-400 border border-red-500/30"
-                }
+                bg-green-500/20 text-green-400 border border-green-500/30
               `}
             >
-              {game.status === "installed" && "INSTALLED"}
-              {game.status === "update" && "UPDATE REQUIRED"}
-              {game.status === "not_installed" && "NOT INSTALLED"}
+              INSTALLED
             </span>
 
             <div className="p-4 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold">{game.title}</h2>
                 <p className="text-xs text-zinc-500 mt-1">
-                  LAST: {game.lastPlayed}
+                  LAST: Never
                 </p>
               </div>
 
@@ -72,7 +79,6 @@ export default function Library() {
           </div>
         ))}
       </div>
-
 
       <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
         <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-6">

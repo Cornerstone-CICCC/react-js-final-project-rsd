@@ -1,32 +1,27 @@
 import { create } from "zustand";
 
-export type OwnedGame = {
-  id: string;
+export type LibraryGame = {
+  _id: string;
   title: string;
-  image: string;
-  status: "installed" | "update" | "not_installed";
-  lastPlayed: string;
   price: number;
-  favorite?: boolean;
-  acquiredAt: string;
+  mainImg: string;
+  status?: string;
+  lastPlayed?: string;
 };
 
 type LibraryStore = {
-  games: OwnedGame[];
-  addGame: (game: OwnedGame) => void;
-  toggleFavorite: (id: string) => void;
+  games: LibraryGame[];
+  setGames: (games: LibraryGame[]) => void;
+  addGame: (game: LibraryGame) => void;
 };
 
 export const useLibrary = create<LibraryStore>((set) => ({
   games: [],
+
+  setGames: (games) => set({ games }),
+
   addGame: (game) =>
     set((state) => ({
       games: [...state.games, game],
-    })),
-  toggleFavorite: (id) =>
-    set((state) => ({
-      games: state.games.map((g) =>
-        g.id === id ? { ...g, favorite: !g.favorite } : g
-      ),
     })),
 }));

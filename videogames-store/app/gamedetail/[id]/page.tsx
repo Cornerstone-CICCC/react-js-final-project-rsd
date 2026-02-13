@@ -1,33 +1,67 @@
 "use client";
 
+import { use, useEffect, useState } from "react";
 import Image from "next/image";
 import { useWishlist } from "@/app/store/wishlist";
 import { useToast } from "@/app/store/toast";
 import { useCart } from "@/app/store/cart";
+import { useParams } from "next/navigation";
 
-export default function GameDetail() {
 
-  const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
-  const game = { id: "halo-infinite", title: "Halo Infinite", price: "$59.99", image: "https://placehold.co/800x400/png", }; 
-  const alreadyAdded = items.some((g) => g.id === game.id);
-  const showToast = useToast((state) => state.show);
+type Game = {
+  _id: string;
+  title: string;
+  description: string;
+  price: number;
+  mainImg?: string;
+  images?: string[];
+};
+
+export default function GameDetail({ params }: { params: { id: string } }) {
+  const { id } = useParams();
+
+  const [game, setGame] = useState<Game | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const addToWishlist = useWishlist((s) => s.addToWishlist);
+  const wishlistItems = useWishlist((s) => s.items);
+  const showToast = useToast((s) => s.show);
 
   const addToCart = useCart((s) => s.add);
   const openCart = useCart((s) => s.open);
 
-  
+  const alreadyAdded = wishlistItems.some((g) => g._id === game?._id);
 
+  useEffect(() => {
+    async function loadGame() {
+      try {
+        const res = await fetch(`/api/games/${id}`);
+        const data = await res.json();
+        setGame(data);
+      } catch (err) {
+        console.error("Error loading game:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadGame();
+  }, [id]);
+
+  if (loading) return <p className="text-white p-10">Loading...</p>;
+  if (!game) return <p className="text-white p-10">Game not found</p>;
 
   return (
     <div className="min-h-screen bg-black text-white px-10 py-20">
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-20">
         
+        {/* LEFT SIDE — IMAGES */}
         <div>
           <div className="relative w-full h-[400px] rounded-xl overflow-hidden border border-zinc-800">
             <Image
-              src="https://placehold.co/800x400/png"
-              alt="Halo Infinite"
+              src={game.mainImg || "https://placehold.co/800x400/png"}
+              alt={game.title}
               fill
               className="object-cover"
               unoptimized
@@ -35,42 +69,37 @@ export default function GameDetail() {
           </div>
 
           <div className="grid grid-cols-3 gap-4 mt-4">
-            <Thumb />
-            <Thumb />
-            <Thumb />
+            {(game.images || []).map((img, i) => (
+              <Thumb key={i} src={img} />
+            ))}
           </div>
         </div>
 
+        {/* RIGHT SIDE — INFO */}
         <div className="space-y-6">
-          <h1 className="text-4xl font-extrabold">Halo Infinite</h1>
-
-          <div className="flex items-center gap-2 text-zinc-400">
-            <span className="text-yellow-400 text-xl">★★★★☆</span>
-            <span>(12,450 reviews)</span>
-          </div>
+          <h1 className="text-4xl font-extrabold">{game.title}</h1>
 
           <div className="flex items-center gap-4">
-            <span className="text-3xl font-bold text-green-400">$59.99</span>
-            <span className="text-zinc-500 line-through">$69.99</span>
+            <span className="text-3xl font-bold text-green-400">${game.price}</span>
           </div>
 
           <div className="flex gap-4">
             <button
-                onClick={() => {
-                  addToCart({
-                    id: game.id,
-                    title: game.title,
-                    price: 59.99,
-                    image: game.image,
-                    quantity: 1,
-                  });
-                  showToast("Added to cart ✓");
-                  openCart(); 
-                }}
-                className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition"
-              >
-                Add to Cart
-              </button>
+              onClick={() => {
+                addToCart({
+                  id: game._id,
+                  title: game.title,
+                  price: game.price,
+                  imageImg: game.mainImg,
+                  quantity: 1,
+                });
+                showToast("Added to cart ✓");
+                openCart();
+              }}
+              className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition"
+            >
+              Add to Cart
+            </button>
 
             <button
               onClick={() => {
@@ -90,76 +119,23 @@ export default function GameDetail() {
             </button>
           </div>
 
-          <div className="space-y-2 text-zinc-300">
-            <Feature text="Optimized for Xbox Series X|S" />
-            <Feature text="Smart Delivery" />
-            <Feature text="Online Multiplayer (2–24 players)" />
-            <Feature text="68 Achievements" />
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-lg font-semibold mb-2">Platforms</h3>
-            <div className="flex gap-3">
-              <Platform name="Xbox Series X|S" />
-              <Platform name="Xbox One" />
-              <Platform name="PC" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-4xl space-y-6">
-        <h2 className="text-2xl font-bold">About this game</h2>
-        <p className="text-zinc-400 leading-relaxed">
-          When all hope is lost and humanity’s fate hangs in the balance, the Master Chief
-          is ready to confront the most ruthless foe he’s ever faced. Step inside the armor
-          of humanity’s greatest hero to experience an epic adventure and finally explore
-          the scale of the Halo ring itself.
-        </p>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-zinc-300 mt-8">
-          <Meta label="Publisher" value="Xbox Game Studios" />
-          <Meta label="Developer" value="343 Industries" />
-          <Meta label="Release Date" value="Dec 8, 2021" />
-          <Meta label="Rating" value="4.8" />
+          <p className="text-zinc-300 leading-relaxed">{game.description}</p>
         </div>
       </div>
     </div>
   );
 }
 
-
-function Thumb() {
+function Thumb({ src }: { src: string }) {
   return (
     <div className="relative w-full h-[100px] rounded-lg overflow-hidden border border-zinc-800">
       <Image
-        src="https://placehold.co/300x200/png"
+        src={src}
         alt="Screenshot"
         fill
         className="object-cover"
         unoptimized
       />
-    </div>
-  );
-}
-
-function Feature({ text }: { text: string }) {
-  return <div className="flex items-center gap-2">• <span>{text}</span></div>;
-}
-
-function Platform({ name }: { name: string }) {
-  return (
-    <span className="px-3 py-1 bg-zinc-800 border border-zinc-700 rounded-lg text-sm">
-      {name}
-    </span>
-  );
-}
-
-function Meta({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <span className="text-zinc-500">{label}</span>
-      <p className="text-white font-semibold">{value}</p>
     </div>
   );
 }

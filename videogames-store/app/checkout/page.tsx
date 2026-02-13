@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { useCart } from "@/app/store/cart";
 import { useRouter } from "next/navigation";
-import { useLibrary } from "../store/library";
+import { useLibrary } from "../store/library";  
+import { useUser } from "@/app/store/user";
+import { useToast } from "@/app/store/toast"; 
 
 export default function CheckoutPage() {
   const items = useCart((s) => s.items);
@@ -19,21 +21,31 @@ export default function CheckoutPage() {
   const tax = subtotal * 0.12; 
   const total = subtotal + tax;
 
-  const handlePlaceOrder = () => {
-    items.forEach((item) => {
-      addGame({
-        id: item.id,
-        title: item.title,
-        image: item.image,
-        price: item.price,
-        status: "installed",
-        lastPlayed: "Never",
-        acquiredAt: new Date().toISOString(),
-      });
-    });
+  const user = useUser((s) => s.user);
+  const showToast = useToast((s) => s.show);
 
-    router.push("/library");
-  };
+const handlePlaceOrder = async () => {
+  if (!user) {
+    showToast("You must be logged in to checkout");
+    return;
+  }
+
+  for (const item of items) {
+    await fetch("/api/checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user._id,
+        gameId: item.id,
+        price: item.price,
+      }),
+    });
+  }
+
+  useCart.getState().clear();
+  router.push("/library");
+};
+
 
 
 
@@ -145,7 +157,7 @@ export default function CheckoutPage() {
                 key={item.id}
                 title={item.title}
                 quantity={item.quantity}
-                image={item.image}
+                image={item.imageImg || "https://placehold.co/400x200/png"}
                 price={
                   <span className="text-green-400 font-semibold">
                     ${ (item.price * item.quantity).toFixed(2) }
