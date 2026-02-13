@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export interface IUser extends Document {
   //id: string;
-  name: string;
+  name?: string; //optional
   password: string;
   email: string;
   isAdmin: boolean;
