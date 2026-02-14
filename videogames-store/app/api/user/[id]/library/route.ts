@@ -18,13 +18,8 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    console.log("📥 User ID recibido:", id);
-    console.log("📥 ownedGames del usuario:", user.ownedGames);
-
-    const games = await Game.find({ _id: { $in: user.ownedGames } });
-
-
-    console.log("📤 Juegos encontrados:", games);
+   const validIds = user.ownedGames.filter((item) =>  typeof item === "string" && item.trim() !== ""); 
+   const games = await Game.find({ _id: { $in: validIds } });
 
 
     return NextResponse.json(games, { status: 200 });

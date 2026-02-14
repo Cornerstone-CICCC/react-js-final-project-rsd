@@ -7,16 +7,11 @@ import { Game, useWishlist } from "./store/wishlist";
 import { useUser } from "./store/user";
 import { useCart } from "./store/cart";
 
+
+
+
 export default function Home() {
 
-  type Game = {
-  _id: string;
-  title: string;
-  description: string;
-  price: number;
-  mainImg?: string;
-  image?: string;
-};
 
   const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
   const [games, setGames] = useState<Game[]>([]);
@@ -25,7 +20,8 @@ export default function Home() {
   const setWishlist = useWishlist((s) => s.setItems);
   const trendingGames = games.slice(0, 8); 
   const topSellers = games.slice(8, 16); 
-  const newReleases = games.slice(16, 24); 
+  const newReleases = games.slice(16, 24);
+  const herogames = games.slice(0, 4); 
 
 
 
@@ -105,45 +101,11 @@ export default function Home() {
     
     <main className="min-h-screen bg-black text-white">
 
-      <section className="relative h-[500px] w-full">
-        <Image
-          src={heroGame?.mainImg || "https://placehold.co/1200x500/png"}
-          alt={heroGame?.title || "Game Image"}
-          fill
-          className="object-cover opacity-60"
-          unoptimized
-        />
-
-        <div className="absolute inset-0 flex flex-col justify-center px-16">
-          <h1 className="text-5xl font-extrabold mb-4">{heroGame?.title}</h1>
-          <p className="text-zinc-300 max-w-xl mb-6">
-            {heroGame?.description}
-          </p>
-          <div className="flex gap-4">
-            <button onClick={() => {
-              window.location.href = `/gamedetail/${heroGame?._id}`;
-            }} className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition">
-              View More 
-            </button>
-
-             <button
-                onClick={() => handleAddToWishlist(heroGame!)}
-                disabled={alreadyAdded}
-                className={`
-                  px-6 py-3 rounded-lg border transition
-                  ${alreadyAdded
-                    ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
-                    : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
-                  }
-                `}
-              >
-                {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
-              </button>
-
-          </div>
-        </div>
-      </section>
-
+      <HeroCarousel
+        games={herogames}
+       handleAddToWishlist={handleAddToWishlist}
+        wishlistItems={items}
+      />
       <div className="px-16 py-12 space-y-16">
 
         <Section title={ <> Trending <span className="text-[#3DFF6B]">Now</span> </> }>
@@ -247,4 +209,115 @@ function GameGrid({ games }: { games?: Game[] }) {
     </div>
   );
 }
+function HeroCarousel({
+  games,
+  handleAddToWishlist,
+  wishlistItems
+}: {
+  games: Game[];
+  handleAddToWishlist: (g: Game) => void;
+  wishlistItems: Game[];
+}) {
+  if (!games || games.length === 0) {
+    return (
+      <section className="relative h-[500px] w-full bg-zinc-900 flex items-center justify-center">
+        <p className="text-zinc-500">Loading...</p>
+      </section>
+    );
+  }
+
+  const [index, setIndex] = useState(0);
+  const current = games[index];
+
+  const alreadyAdded = wishlistItems.some((i) => i._id === current?._id);
+
+  const next = () => setIndex((i) => (i + 1) % games.length);
+  const prev = () => setIndex((i) => (i - 1 + games.length) % games.length);
+
+    useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((i) => (i + 1) % games.length);
+    }, 7000);
+
+    return () => clearInterval(interval);
+  }, [games.length]);
+
+
+  return (
+    <section className="relative h-[500px] w-full overflow-hidden">
+
+      <div className="absolute inset-0 transition-all duration-700">
+        <Image
+          key={current.mainImg}
+          src={current.mainImg || "https://placehold.co/1200x500/png"}
+          alt={current.title}
+          fill
+          className="object-cover opacity-60 z-0"
+          unoptimized
+        />
+      </div>
+
+      <div className="absolute inset-0 flex flex-col justify-center px-16">
+        <h1 className="text-5xl font-extrabold mb-4">{current.title}</h1>
+        <p className="text-zinc-300 max-w-xl mb-6">{current.description}</p>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => (window.location.href = `/gamedetail/${current._id}`)}
+            className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition"
+          >
+            View More
+          </button>
+
+          <button
+            onClick={() => handleAddToWishlist(current)}
+            disabled={alreadyAdded}
+            className={`
+              px-6 py-3 rounded-lg border transition
+              ${alreadyAdded
+                ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
+                : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+              }
+            `}
+          >
+            {alreadyAdded ? "Added ✓" : "Add to Wishlist"}
+          </button>
+        </div>
+      </div>
+
+        <div className="absolute inset-x-0 bottom-6 px-6 flex items-center justify-between pointer-events-none">
+          <div className="flex-1 flex justify-center gap-2 pointer-events-auto">
+            {games.map((_, i) => (
+              <div
+                key={i}
+                onClick={() => setIndex(i)}
+                className={`w-3 h-3 rounded-full cursor-pointer transition ${
+                  i === index ? "bg-green-500" : "bg-zinc-500/50"
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex gap-3 pointer-events-auto hero-buttons">
+            <button
+              onClick={prev}
+              className="w-10 h-10 bg-zinc-900/60 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-800 transition"
+            >
+              ‹
+            </button>
+
+            <button
+              onClick={next}
+              className="w-10 h-10 bg-zinc-900/60 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-800 transition"
+            >
+              ›
+            </button>
+          </div>
+        </div>
+
+    </section>
+  );
+}
+
+
 
