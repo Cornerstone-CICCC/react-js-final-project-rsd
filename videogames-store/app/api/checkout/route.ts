@@ -1,6 +1,5 @@
 import { connectDB } from "@/app/api/lib/mongodb";
 import { User } from "../models/User";
-import { Order } from "../models/Order";
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 

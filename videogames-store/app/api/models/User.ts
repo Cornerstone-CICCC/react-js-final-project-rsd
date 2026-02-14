@@ -21,7 +21,7 @@ const UserSchema = new Schema<IUser>({
   email: { type: String, required: true },
   isAdmin: { type: Boolean, required: false },
   whishlist: [{ type: Schema.Types.ObjectId, ref: "Game" }],
-  ownedGames: [{ type: Schema.Types.ObjectId, ref: "Game" }],
+  ownedGames: [ { type: String, ref: "Game", }, ],
 });
 
 export const User: Model<IUser> =
