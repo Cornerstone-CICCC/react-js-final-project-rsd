@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
     const { userId, cartItems } = await req.json();
 
     const cartItemsForStripe = cartItems.map((item: any) => ({
-      _id: item._id.toString(), 
+      _id: item._id, 
       title: item.title,
       price: item.price,
       quantity: item.quantity,
