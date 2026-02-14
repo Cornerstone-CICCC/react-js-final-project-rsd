@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
     name: "user-login",
     value: user._id.toString(),
     httpOnly: true,
-    maxAge: 60 * 60 * 24 * 7, // 7 days
+    maxAge: 60 * 60 * 24 * 7, 
     path: "/",
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production" ? true : false,

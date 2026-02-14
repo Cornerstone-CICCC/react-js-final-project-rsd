@@ -18,7 +18,9 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState<Game[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const user = useUser((s) => s.user);
-  
+  const logout = useUser((s) => s.logout);
+  const [menuOpen, setMenuOpen] = useState(false);
+
 
 
   useEffect(() => {
@@ -67,6 +69,19 @@ export default function Header() {
   useEffect(() => {
     function handleClickOutside() {
       setShowSuggestions(false);
+    }
+
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
+
+
+    useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".user-menu")) {
+        setMenuOpen(false);
+      }
     }
 
     window.addEventListener("click", handleClickOutside);
@@ -202,19 +217,53 @@ export default function Header() {
               Sign In
             </Link>
           ) : (
-            <Link
-              href="/profile"
-              className="
-                w-10 h-10 rounded-full bg-green-500/20 border border-green-500 
-                flex items-center justify-center 
-                text-green-400 hover:text-green-300
-                hover:bg-green-500/30 hover:border-green-400
-                transition
-              "
-            >
-              <User size={18} />
-</Link>
+            <div className="relative user-menu">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setMenuOpen((prev) => !prev);
+                }}
+                className="
+                  w-10 h-10 rounded-full bg-green-500/20 border border-green-500 
+                  flex items-center justify-center 
+                  text-green-400 hover:text-green-300
+                  hover:bg-green-500/30 hover:border-green-400
+                  transition
+                "
+              >
+                <User size={18} />
+              </button>
+              {menuOpen && (
+                <div
+                  className="
+                    absolute right-0 mt-3 w-44 bg-zinc-900 border border-zinc-700 
+                    rounded-lg shadow-xl overflow-hidden animate-fadeIn
+                  "
+                >
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition"
+                  >
+                    Profile
+                  </Link>
 
+                  <button
+                    onClick={async () => {
+                      await fetch("/api/logout", { method: "POST" });
+
+                      useUser.getState().logout();
+                      setMenuOpen(false);
+
+                      window.location.href = "/";
+                    }}
+                    className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition"
+                  >
+                    Logout
+                  </button>
+
+                </div>
+              )}
+            </div>
           )}
 
         </div>
