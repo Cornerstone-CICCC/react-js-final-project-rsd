@@ -33,13 +33,15 @@ export default function CheckoutPage() {
     const cartItemsForStripe = [];
 
     for (const item of items) {
+
       cartItemsForStripe.push({
-        id: item.id,
+        _id: item._id,
         title: item.title,
         price: item.price,
         quantity: item.quantity,
       });
     }
+    console.log("🛒 Cart items:", cartItemsForStripe);
 
     try {
       const response = await fetch("/api/checkout", {
@@ -172,7 +174,7 @@ export default function CheckoutPage() {
           <div className="space-y-4 text-zinc-300">
             {items.map((item) => (
               <SummaryItem
-                key={item.id}
+                key={item._id}
                 title={item.title}
                 quantity={item.quantity}
                 image={item.imageImg || "https://placehold.co/400x200/png"}

@@ -9,6 +9,13 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, cartItems } = await req.json();
 
+    const cartItemsForStripe = cartItems.map((item: any) => ({
+      _id: item._id.toString(), 
+      title: item.title,
+      price: item.price,
+      quantity: item.quantity,
+    }));
+
     const line_items = cartItems.map((item: any) => ({
       price_data: {
         currency: "usd",
@@ -24,14 +31,17 @@ export async function POST(req: NextRequest) {
       mode: "payment",
       success_url: `http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `http://localhost:3000/cart`,
-      metadata: {
-        userId,
-        cartItems: JSON.stringify(cartItems),
+
+      metadata: { 
+        userId, 
+        cartItems: JSON.stringify(cartItemsForStripe),
       },
     });
 
     return NextResponse.json({ url: session.url });
+
   } catch (err: any) {
+    console.error("❌ Error en /api/checkout:", err.message);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

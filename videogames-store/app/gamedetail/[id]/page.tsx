@@ -123,7 +123,7 @@ export default function GameDetail() {
             <button
               onClick={() => {
                 addToCart({
-                  id: game._id,
+                  _id: game._id,
                   title: game.title,
                   price: game.price,
                   imageImg: game.mainImg,
