@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type CartItem = {
-  id: string;
+  _id: string;
   title: string;
   price: number;
   imageImg?: string;
@@ -42,11 +42,11 @@ export const useCart = create<CartStore>()(
 
       add: (item) =>
         set((state) => {
-          const exists = state.items.find((i) => i.id === item.id);
+          const exists = state.items.find((i) => i._id === item._id);
           if (exists) {
             return {
               items: state.items.map((i) =>
-                i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+                i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i
               ),
             };
           }
@@ -55,13 +55,13 @@ export const useCart = create<CartStore>()(
 
       remove: (id) =>
         set((state) => ({
-          items: state.items.filter((i) => i.id !== id),
+          items: state.items.filter((i) => i._id !== id),
         })),
 
       increase: (id) =>
         set((state) => ({
           items: state.items.map((i) =>
-            i.id === id ? { ...i, quantity: i.quantity + 1 } : i
+            i._id === id ? { ...i, quantity: i.quantity + 1 } : i
           ),
         })),
 
@@ -69,7 +69,7 @@ export const useCart = create<CartStore>()(
         set((state) => ({
           items: state.items
             .map((i) =>
-              i.id === id ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i
+              i._id === id ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i
             )
             .filter((i) => i.quantity > 0),
         })),

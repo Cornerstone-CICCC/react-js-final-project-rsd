@@ -41,7 +41,7 @@ export default function Cart() {
           )}
 
           {items.map((item) => (
-            <div key={item.id} className="flex gap-4">
+            <div key={item._id} className="flex gap-4">
               <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-zinc-700">
                 <Image
                   src={item.imageImg || "https://placehold.co/400x200/png"}
@@ -58,7 +58,7 @@ export default function Cart() {
 
                 <div className="flex items-center gap-3 mt-2">
                   <button
-                    onClick={() => decrease(item.id)}
+                    onClick={() => decrease(item._id)}
                     className="px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 text-white"
                   >
                     -
@@ -67,14 +67,14 @@ export default function Cart() {
                   <span className="text-white">{item.quantity}</span>
 
                   <button
-                    onClick={() => increase(item.id)}
+                    onClick={() => increase(item._id)}
                     className="px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700 text-white"
                   >
                     +
                   </button>
 
                   <button
-                    onClick={() => remove(item.id)}
+                    onClick={() => remove(item._id)}
                     className="ml-auto text-red-400 hover:text-red-300"
                   >
                     <Trash2 size={18} />
