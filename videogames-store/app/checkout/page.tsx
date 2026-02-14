@@ -33,15 +33,6 @@ export default function CheckoutPage() {
     const cartItemsForStripe = [];
 
     for (const item of items) {
-      // await fetch("/api/checkout", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({
-      //     userId: user._id,
-      //     gameId: item.id,
-      //     price: item.price,
-      //   }),
-      // });
       cartItemsForStripe.push({
         id: item.id,
         title: item.title,
@@ -64,7 +55,7 @@ export default function CheckoutPage() {
 
       if (data.url) {
         window.location.href = data.url;
-        // useCart.getState().clear();
+        useCart.getState().clear();
         // router.push("/library");
       } else {
         throw new Error(data.error || "Failed to create checkout session");
@@ -104,7 +95,6 @@ export default function CheckoutPage() {
           <Section title="Payment Method">
             <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
-                {/* CREDIT CARD */}
                 <button
                   onClick={() => setMethod("credit")}
                   className={`

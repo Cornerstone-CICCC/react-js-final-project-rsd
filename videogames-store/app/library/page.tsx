@@ -16,7 +16,8 @@ export default function Library() {
       try {
         const res = await fetch(`/api/user/${user?._id}/library`);
         const data = await res.json();
-        setGames(data.games || []);
+        setGames(Array.isArray(data) ? data : []);
+        console.log("Loaded library:", data);
       } catch (err) {
         console.error("Error loading library:", err);
       }

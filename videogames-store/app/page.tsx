@@ -23,9 +23,9 @@ export default function Home() {
   const showToast = useToast((state) => state.show);
   const user = useUser((s) => s.user);
   const setWishlist = useWishlist((s) => s.setItems);
-  const trendingGames = games.slice(0, 5); 
-  const topSellers = games.slice(5, 10); 
-  const newReleases = games.slice(10, 16); 
+  const trendingGames = games.slice(0, 8); 
+  const topSellers = games.slice(8, 16); 
+  const newReleases = games.slice(16, 24); 
 
 
 
