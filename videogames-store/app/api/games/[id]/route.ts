@@ -1,6 +1,7 @@
 import { connectDB } from "@/app/api/lib/mongodb";
 import { Game } from "../../models/Game";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/app/api/lib/requireAdmin"; // ✅ add this
 
 export async function GET(
   _: NextRequest,
@@ -24,6 +25,12 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // ✅ ADMIN GUARD
+    const auth = await requireAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: "Forbidden" }, { status: auth.status });
+    }
+
     await connectDB();
 
     const { id } = await params;
@@ -73,6 +80,12 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // ✅ ADMIN GUARD
+    const auth = await requireAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: "Forbidden" }, { status: auth.status });
+    }
+
     await connectDB();
 
     const { id } = await params;

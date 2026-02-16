@@ -1,16 +1,13 @@
 import { connectDB } from "@/app/api/lib/mongodb";
 import { Game } from "../models/Game";
 import { NextRequest, NextResponse } from "next/server";
+import { requireAdmin } from "@/app/api/lib/requireAdmin"; // ✅ add this
 
 export async function GET(req: NextRequest) {
   await connectDB();
 
   const { searchParams } = new URL(req.url);
-
-  // sort=createdAt | releaseDate
   const sort = searchParams.get("sort");
-
-  // trending=true (optional filter)
   const trending = searchParams.get("trending");
 
   const filter: Record<string, unknown> = {};
@@ -27,6 +24,12 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // ✅ ADMIN GUARD (must be before creating)
+    const auth = await requireAdmin();
+    if (!auth.ok) {
+      return NextResponse.json({ error: "Forbidden" }, { status: auth.status });
+    }
+
     await connectDB();
 
     const body = await req.json();
@@ -36,15 +39,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "gameInfo is required" }, { status: 400 });
     }
 
-    // ✅ Normalize incoming values (date + boolean)
     const payload = {
       ...gameInfo,
-
       releaseDate:
         gameInfo.releaseDate && String(gameInfo.releaseDate).trim() !== ""
           ? new Date(gameInfo.releaseDate)
           : null,
-
       isTrending:
         typeof gameInfo.isTrending === "boolean"
           ? gameInfo.isTrending
