@@ -69,154 +69,56 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white px-10 py-20">
-      <div className="flex items-center justify-center gap-10 mb-16 text-zinc-500">
-        <span className="text-zinc-600">Cart</span>
-        <div className="w-10 h-[2px] bg-zinc-700" />
-        <span className="text-green-400 font-semibold">Checkout</span>
-        <div className="w-10 h-[2px] bg-zinc-700" />
-        <span className="text-zinc-600">Confirmation</span>
+  <div className="min-h-screen bg-black text-white px-6 py-20 flex justify-center">
+    <div className="w-full max-w-xl bg-zinc-900/60 border border-zinc-800 rounded-2xl p-10">
+      <h2 className="text-2xl font-bold mb-8 text-center">Order Summary</h2>
+
+      <div className="space-y-6 text-zinc-300">
+        {items.map((item) => (
+          <SummaryItem
+            key={item._id}
+            title={item.title}
+            quantity={item.quantity}
+            image={item.imageImg || "https://placehold.co/400x200/png"}
+            price={
+              <span className="text-green-400 font-semibold">
+                ${(item.price * item.quantity).toFixed(2)}
+              </span>
+            }
+          />
+        ))}
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-12">
-          <Section title="Contact Information">
-            <Input label="Email Address" placeholder="name@example.com" />
-          </Section>
+      <div className="mt-10 space-y-3 text-zinc-300 text-lg">
+        <TotalRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+        <TotalRow label="Tax" value={`$${tax.toFixed(2)}`} />
+        <TotalRow
+          label="Total"
+          value={`$${total.toFixed(2)}`}
+          bold
+          highlight
+        />
+      </div>
 
-          <Section title="Billing Details">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Input label="Name" placeholder="John Doe" />
-              <Input label="Address" placeholder="123 Gaming Street" />
-              <Input label="City" placeholder="Los Angeles" />
-              <Input label="State/Province" placeholder="CA" />
-              <Input label="Postal/Zip Code" placeholder="90001" />
-            </div>
-          </Section>
+      <button
+        onClick={handlePlaceOrder}
+        className="w-full mt-10 bg-green-500 text-black font-semibold py-4 rounded-lg hover:bg-green-400 transition text-lg"
+      >
+        PLACE ORDER
+      </button>
 
-          <Section title="Payment Method">
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  onClick={() => setMethod("credit")}
-                  className={`
-                    flex items-center gap-3 p-4 rounded-xl border transition
-                    ${
-                      method === "credit"
-                        ? "border-green-400 text-green-400 bg-green-400/10"
-                        : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                    }
-                  `}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-
-                  <span className="font-semibold">Credit Card</span>
-                </button>
-
-                <button
-                  onClick={() => setMethod("debit")}
-                  className={`
-                    flex items-center gap-3 p-4 rounded-xl border transition
-                    ${
-                      method === "debit"
-                        ? "border-green-400 text-green-400 bg-green-400/10"
-                        : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
-                    }
-                  `}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <rect x="2" y="5" width="20" height="14" rx="2" />
-                    <path d="M2 10h20" />
-                  </svg>
-
-                  <span className="font-semibold">Debit Card</span>
-                </button>
-              </div>
-              <Input label="Card Number" placeholder="0000 0000 0000 0000" />
-
-              <div className="grid grid-cols-2 gap-6">
-                <Input label="Expiration Date" placeholder="MM/YY" />
-                <Input label="CVC" placeholder="123" />
-              </div>
-
-              <Input label="Name on Card" placeholder="JOHN DOE" />
-
-              <div className="flex items-center gap-3 mt-2">
-                <input type="checkbox" className="accent-green-500" />
-                <span className="text-zinc-400">
-                  Save this card for next time
-                </span>
-              </div>
-            </div>
-          </Section>
-        </div>
-
-        <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-8 h-fit">
-          <h2 className="text-xl font-bold mb-6">Order Summary</h2>
-
-          <div className="space-y-4 text-zinc-300">
-            {items.map((item) => (
-              <SummaryItem
-                key={item._id}
-                title={item.title}
-                quantity={item.quantity}
-                image={item.imageImg || "https://placehold.co/400x200/png"}
-                price={
-                  <span className="text-green-400 font-semibold">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </span>
-                }
-              />
-            ))}
-          </div>
-
-          <div className="mt-8 space-y-2 text-zinc-300">
-            <TotalRow label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
-            <TotalRow label="Tax" value={`$${tax.toFixed(2)}`} />
-            <TotalRow
-              label="Total"
-              value={`$${total.toFixed(2)}`}
-              bold
-              highlight
-            />
-          </div>
-
-          <button
-            onClick={handlePlaceOrder}
-            className="w-full mt-8 bg-green-500 text-black font-semibold py-3 rounded-lg hover:bg-green-400 transition"
-          >
-            PLACE ORDER
-          </button>
-
-          <div className="text-center mt-6">
-            <a
-              href="/cart"
-              className="text-zinc-400 hover:text-white transition"
-            >
-              RETURN TO CART
-            </a>
-          </div>
-        </div>
+      <div className="text-center mt-6">
+        <a
+          href="/"
+          className="text-zinc-400 hover:text-white transition"
+        >
+          RETURN HOME
+        </a>
       </div>
     </div>
-  );
+  </div>
+);
+
 }
 
 type SectionProps = {
