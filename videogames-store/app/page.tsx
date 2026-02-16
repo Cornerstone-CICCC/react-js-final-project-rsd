@@ -106,7 +106,7 @@ export default function Home() {
        handleAddToWishlist={handleAddToWishlist}
         wishlistItems={items}
       />
-      <div className="px-16 py-12 space-y-16">
+      <div className="px-4 md:px-16 py-8 md:py-12 space-y-12 md:space-y-16">
 
         <Section title={ <> Trending <span className="text-[#3DFF6B]">Now</span> </> }>
           <GameGrid games={trendingGames} />
@@ -120,8 +120,7 @@ export default function Home() {
           <GameGrid games={newReleases}/>
         </Section>
 
-       <div className="relative w-full rounded-xl overflow-hidden 
-                bg-black border border-zinc-700 p-10">
+       <div className="relative w-full rounded-xl overflow-hidden bg-black border border-zinc-700 p-6 md:p-10">
 
           <img
             src="/img_banner.jpg"
@@ -132,7 +131,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
 
           <div className="relative z-10 max-w-xl">
-            <h2 className="text-3xl font-extrabold text-white leading-tight mb-4">
+            <h2 className="text-2xl md:text-3xl font-extrabold leading-tight mb-4">
               PLAY HUNDREDS OF{" "}
               <span className="text-[#3DFF6B]">HIGH‑QUALITY GAMES</span>
             </h2>
@@ -184,14 +183,15 @@ function GameGrid({ games }: { games?: Game[] }) {
   }
 
   return (
-    <div className="grid grid-cols-4 gap-6">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
+
       {games.map((g) => (
         <Link
           key={g._id}
           href={`/gamedetail/${g._id}`}
           className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:bg-zinc-800 transition"
         >
-          <div className="relative w-full h-64 rounded-lg overflow-hidden mb-4">
+          <div className="relative w-full h-40 sm:h-48 md:h-64 rounded-lg overflow-hidden mb-4">
             <Image
               src={g.mainImg || g.image || "https://placehold.co/300x200/png"}
               alt={g.title}
@@ -244,7 +244,7 @@ function HeroCarousel({
 
 
   return (
-    <section className="relative h-[500px] w-full overflow-hidden">
+    <section className="relative h-[400px] md:h-[500px] w-full overflow-hidden">
 
       <div className="absolute inset-0 transition-all duration-700">
         <Image
@@ -257,14 +257,19 @@ function HeroCarousel({
         />
       </div>
 
-      <div className="absolute inset-0 flex flex-col justify-center px-16">
-        <h1 className="text-5xl font-extrabold mb-4">{current.title}</h1>
-        <p className="text-zinc-300 max-w-xl mb-6">{current.description}</p>
+      <div className="absolute inset-0 flex flex-col justify-center px-4 md:px-16">
+        <h1 className="text-3xl md:text-5xl font-extrabold mb-2 md:mb-4">
+          {current.title}
+        </h1>
 
-        <div className="flex gap-4">
+        <p className="text-zinc-300 max-w-xl mb-4 md:mb-6 text-sm md:text-base">
+          {current.description}
+        </p>
+
+        <div className="flex gap-3 md:gap-4">
           <button
             onClick={() => (window.location.href = `/gamedetail/${current._id}`)}
-            className="px-6 py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition"
+            className="px-4 py-2 md:px-6 md:py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition text-sm md:text-base"
           >
             View More
           </button>
@@ -273,7 +278,7 @@ function HeroCarousel({
             onClick={() => handleAddToWishlist(current)}
             disabled={alreadyAdded}
             className={`
-              px-6 py-3 rounded-lg border transition
+              px-4 py-2 md:px-6 md:py-3 rounded-lg border transition text-sm md:text-base
               ${alreadyAdded
                 ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
                 : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
@@ -285,36 +290,36 @@ function HeroCarousel({
         </div>
       </div>
 
-        <div className="absolute inset-x-0 bottom-6 px-6 flex items-center justify-between pointer-events-none">
-          <div className="flex-1 flex justify-center gap-2 pointer-events-auto">
-            {games.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => setIndex(i)}
-                className={`w-3 h-3 rounded-full cursor-pointer transition ${
-                  i === index ? "bg-green-500" : "bg-zinc-500/50"
-                }`}
-              />
-            ))}
-          </div>
-
-          <div className="flex gap-3 pointer-events-auto hero-buttons">
-            <button
-              onClick={prev}
-              className="w-10 h-10 bg-zinc-900/60 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-800 transition"
-            >
-              ‹
-            </button>
-
-            <button
-              onClick={next}
-              className="w-10 h-10 bg-zinc-900/60 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-800 transition"
-            >
-              ›
-            </button>
-          </div>
+      {/* Bottom bar */}
+      <div className="absolute inset-x-0 bottom-4 md:bottom-6 px-4 md:px-6 flex items-center justify-between pointer-events-none">
+        <div className="flex-1 flex justify-center gap-2 pointer-events-auto">
+          {games.map((_, i) => (
+            <div
+              key={i}
+              onClick={() => setIndex(i)}
+              className={`w-2 h-2 md:w-3 md:h-3 rounded-full cursor-pointer transition ${
+                i === index ? "bg-green-500" : "bg-zinc-500/50"
+              }`}
+            />
+          ))}
         </div>
 
+        <div className="flex gap-2 md:gap-3 pointer-events-auto">
+          <button
+            onClick={prev}
+            className="w-8 h-8 md:w-10 md:h-10 bg-zinc-900/60 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-800 transition text-lg md:text-xl"
+          >
+            ‹
+          </button>
+
+          <button
+            onClick={next}
+            className="w-8 h-8 md:w-10 md:h-10 bg-zinc-900/60 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-800 transition text-lg md:text-xl"
+          >
+            ›
+          </button>
+        </div>
+      </div>
     </section>
   );
 }
