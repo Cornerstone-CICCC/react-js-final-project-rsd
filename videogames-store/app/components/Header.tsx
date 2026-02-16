@@ -18,14 +18,29 @@ export default function Header() {
   const [suggestions, setSuggestions] = useState<Game[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const user = useUser((s) => s.user);
+  const logout = useUser((s) => s.logout);
+
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".user-menu")) {
+        setUserMenuOpen(false);
+      }
+    }
+    window.addEventListener("click", handleClickOutside);
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
   useEffect(() => {
     async function loadGames() {
       try {
@@ -51,6 +66,7 @@ export default function Header() {
 
   return (
     <>
+      {/* NAVBAR */}
       <nav
         className={`
           fixed top-0 left-0 w-full z-50 transition-all duration-300
@@ -60,7 +76,7 @@ export default function Header() {
           }
         `}
       >
-        <div className="px-4 md:px-10 py-4 flex items-center justify-between gap-4">
+        <div className="px-4 md:px-10 py-4 flex items-center justify-between gap-2 md:gap-4">
 
           <button
             className="md:hidden text-zinc-300 hover:text-white transition"
@@ -93,8 +109,9 @@ export default function Header() {
             <Link href="/community" className="hover:text-white transition">Support</Link>
           </div>
 
-          <div className="flex items-center gap-4 md:gap-6">
+          <div className="flex items-center gap-3 md:gap-6">
 
+            {/* SEARCH DESKTOP */}
             <div
               className="hidden md:flex items-center bg-zinc-900/40 border border-zinc-700/40 rounded-lg px-3 py-2 w-64 relative"
               onClick={(e) => e.stopPropagation()}
@@ -112,7 +129,7 @@ export default function Header() {
               />
 
               {showSuggestions && suggestions.length > 0 && (
-                <div className="absolute left-0 right-0 top-full bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-50 animate-slideDown overflow-hidden">
+              <div className="absolute left-0 right-0 top-full bg-zinc-900 border border-zinc-700 rounded-lg shadow-xl z-[9999] animate-slideDown overflow-visible">
                   {suggestions.map((game) => (
                     <Link
                       key={game._id}
@@ -160,24 +177,77 @@ export default function Header() {
               )}
             </div>
 
+            {/* USER MENU */}
             {!user ? (
-              <Link
-                href="/auth/sign-in"
-                className="flex items-center gap-2 bg-green-500 text-black px-3 py-1.5 md:px-4 md:py-2 rounded-lg font-semibold hover:bg-green-400 transition text-sm md:text-base"
-              >
-                <User size={18} />
-                Sign In
-              </Link>
+              <>
+                <button
+                  onClick={() => (window.location.href = "/auth/sign-in")}
+                  className="md:hidden text-zinc-300 hover:text-white transition"
+                >
+                  <User size={22} />
+                </button>
+
+                <Link
+                  href="/auth/sign-in"
+                  className="hidden md:flex items-center gap-2 bg-green-500 text-black 
+                             px-4 py-2 rounded-lg font-semibold hover:bg-green-400 transition"
+                >
+                  <User size={18} />
+                  Sign In
+                </Link>
+              </>
             ) : (
-              <Link href="/profile">
-                <User size={22} className="text-green-400 hover:text-green-300 transition" />
-              </Link>
+              <div className="relative user-menu">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUserMenuOpen((prev) => !prev);
+                  }}
+                  className="
+                    w-9 h-9 md:w-10 md:h-10 rounded-full bg-green-500/20 border border-green-500 
+                    flex items-center justify-center 
+                    text-green-400 hover:text-green-300
+                    hover:bg-green-500/30 hover:border-green-400
+                    transition
+                  "
+                >
+                  <User size={18} />
+                </button>
+
+                {userMenuOpen && (
+                  <div
+                    className="
+                      absolute right-0 mt-3 w-40 md:w-44 bg-zinc-900 border border-zinc-700 
+                      rounded-lg shadow-xl overflow-visible animate-fadeIn z-[9999]
+                    "
+                  >
+                    <Link
+                      href="/profile"
+                      onClick={() => setUserMenuOpen(false)}
+                      className="block px-4 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition"
+                    >
+                      Profile
+                    </Link>
+
+                    <button
+                      onClick={async () => {
+                        await fetch("/api/logout", { method: "POST" });
+                        logout();
+                        setUserMenuOpen(false);
+                        window.location.href = "/";
+                      }}
+                      className="w-full text-left px-4 py-2 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
           </div>
         </div>
       </nav>
 
-      {/* DRAWER LATERAL (solo móvil) */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 md:hidden"
@@ -203,7 +273,6 @@ export default function Header() {
       {mobileSearchOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 md:hidden flex flex-col p-6">
           
-          {/* Close button */}
           <button
             className="self-end text-zinc-400 hover:text-white transition mb-4"
             onClick={() => {
