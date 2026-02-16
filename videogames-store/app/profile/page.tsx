@@ -30,29 +30,28 @@ export default function ProfilePage() {
   }, []);
 
   async function handleLogout() {
-    // ✅ If you already have a logout route, keep it.
-    // If not, you can create /api/auth/logout later.
-    await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+    await fetch("/api/logout", { method: "POST" }).catch(() => {});
     router.push("/auth/sign-in");
     router.refresh();
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white px-6 pb-12 pt-24 md:pt-28">
+    <div className="min-h-screen bg-[#050505] text-white px-6 pb-12 pt-24 md:pt-28 overflow-x-hidden">
       <div className="max-w-5xl mx-auto">
         {/* Header card */}
         <div className="rounded-[2.5rem] border border-white/10 bg-[#0f0f0f]/60 backdrop-blur-xl p-6 md:p-8 shadow-2xl">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-[#3DFF6B]/15 border border-[#3DFF6B]/20 flex items-center justify-center">
+            <div className="flex items-center gap-4 min-w-0">
+              <div className="w-14 h-14 rounded-2xl bg-[#3DFF6B]/15 border border-[#3DFF6B]/20 flex items-center justify-center shrink-0">
                 <User className="w-7 h-7 text-[#3DFF6B]" />
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-3xl font-black tracking-tight">
                   Your Profile
                 </h1>
-                <p className="mt-1 text-white/35 text-sm">
+
+                <p className="mt-1 text-white/35 text-sm truncate">
                   {loading
                     ? "Loading your account..."
                     : me
@@ -76,10 +75,11 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            
+            <div className="flex flex-wrap gap-3 w-full md:w-auto">
               <button
                 onClick={() => router.push("/library")}
-                className="h-11 px-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-white/70 hover:text-white hover:border-white/20 transition inline-flex items-center gap-2"
+                className="h-11 px-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-white/70 hover:text-white hover:border-white/20 transition inline-flex items-center gap-2 md:flex-none flex-1 justify-center"
                 type="button"
               >
                 <Library className="w-4 h-4" />
@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
               <button
                 onClick={() => router.push("/wishlist")}
-                className="h-11 px-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-white/70 hover:text-white hover:border-white/20 transition inline-flex items-center gap-2"
+                className="h-11 px-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest text-white/70 hover:text-white hover:border-white/20 transition inline-flex items-center gap-2 md:flex-none flex-1 justify-center"
                 type="button"
               >
                 <Heart className="w-4 h-4" />
@@ -97,7 +97,7 @@ export default function ProfilePage() {
 
               <button
                 onClick={handleLogout}
-                className="h-11 px-5 rounded-2xl bg-[#3DFF6B] text-black text-xs font-black uppercase tracking-widest hover:bg-green-400 transition inline-flex items-center gap-2"
+                className="h-11 px-5 rounded-2xl bg-[#3DFF6B] text-black text-xs font-black uppercase tracking-widest hover:bg-green-400 transition inline-flex items-center gap-2 md:flex-none flex-1 justify-center"
                 type="button"
               >
                 <LogOut className="w-4 h-4" />
@@ -133,7 +133,10 @@ export default function ProfilePage() {
           </h2>
 
           <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <InfoRow label="Email" value={loading ? "Loading..." : me?.email ?? "—"} />
+            <InfoRow
+              label="Email"
+              value={loading ? "Loading..." : me?.email ?? "—"}
+            />
             <InfoRow label="Status" value={me ? "Active" : "Guest"} />
             <InfoRow label="Plan" value="Free (School MVP)" />
             <InfoRow label="Theme" value="GAMEHUB Neon Dark" />
