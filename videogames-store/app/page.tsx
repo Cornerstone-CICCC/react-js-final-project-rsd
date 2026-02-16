@@ -32,7 +32,6 @@ export default function Home() {
         const res = await fetch("/api/games");
         const data = await res.json();
         setGames(data);
-        console.log("Loaded games:", data);
       } catch (error) {
         console.error("Error loading games:", error);
       }
@@ -186,7 +185,7 @@ function GameGrid({ games }: { games?: Game[] }) {
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
 
       {games.map((g) => (
-        <Link
+       <Link
           key={g._id}
           href={`/gamedetail/${g._id}`}
           className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:bg-zinc-800 transition"
@@ -201,10 +200,14 @@ function GameGrid({ games }: { games?: Game[] }) {
             />
           </div>
 
+          <span className="bg-green-500/20 text-green-400 text-xs font-semibold px-3 py-1 rounded-md border border-green-500/40 backdrop-blur-sm mb-2 inline-block">
+            {g.category || "Unknown"}
+          </span>
 
           <h3 className="text-lg font-semibold">{g.title}</h3>
           <p className="text-green-400 font-bold mt-1">${g.price}</p>
         </Link>
+
       ))}
     </div>
   );

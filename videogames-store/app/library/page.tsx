@@ -17,7 +17,6 @@ export default function Library() {
         const res = await fetch(`/api/user/${user?._id}/library`);
         const data = await res.json();
         setGames(Array.isArray(data) ? data : []);
-        console.log("Loaded library:", data);
       } catch (err) {
         console.error("Error loading library:", err);
       }
@@ -31,18 +30,6 @@ export default function Library() {
 
       <div className="flex items-center justify-between mb-10">
         <h1 className="text-3xl font-bold">MY COLLECTION</h1>
-
-        <div className="flex gap-4 text-sm">
-          <button className="px-4 py-2 rounded-lg bg-green-500/10 text-green-400 border border-green-500/30">
-            ALL
-          </button>
-          <button className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700">
-            INSTALLED
-          </button>
-          <button className="px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700">
-            FAVORITES
-          </button>
-        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
