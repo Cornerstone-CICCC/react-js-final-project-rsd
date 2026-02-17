@@ -1,0 +1,88 @@
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+export type CartItem = {
+  _id: string;
+  title: string;
+  price: number;
+  imageImg?: string;
+  quantity: number;
+};
+
+type CartStore = {
+  userId: string | null;
+  items: CartItem[];
+  isOpen: boolean;
+
+  setUser: (id: string | null) => void;
+
+  toggle: () => void;
+  open: () => void;
+  close: () => void;
+
+  add: (item: CartItem) => void;
+  remove: (id: string) => void;
+  increase: (id: string) => void;
+  decrease: (id: string) => void;
+  clear: () => void;
+};
+
+export const useCart = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      userId: null,
+      items: [],
+      isOpen: false,
+
+      setUser: (id) => set({ userId: id }),
+
+      toggle: () => set((s) => ({ isOpen: !s.isOpen })),
+      open: () => set({ isOpen: true }),
+      close: () => set({ isOpen: false }),
+
+      add: (item) =>
+        set((state) => {
+          const exists = state.items.find((i) => i._id === item._id);
+          if (exists) {
+            return {
+              items: state.items.map((i) =>
+                i._id === item._id ? { ...i, quantity: i.quantity + 1 } : i
+              ),
+            };
+          }
+          return { items: [...state.items, { ...item, quantity: 1 }] };
+        }),
+
+      remove: (id) =>
+        set((state) => ({
+          items: state.items.filter((i) => i._id !== id),
+        })),
+
+      increase: (id) =>
+        set((state) => ({
+          items: state.items.map((i) =>
+            i._id === id ? { ...i, quantity: i.quantity + 1 } : i
+          ),
+        })),
+
+      decrease: (id) =>
+        set((state) => ({
+          items: state.items
+            .map((i) =>
+              i._id === id ? { ...i, quantity: Math.max(1, i.quantity - 1) } : i
+            )
+            .filter((i) => i.quantity > 0),
+        })),
+
+      clear: () => set({ items: [] }),
+    }),
+
+    {
+      name: "cart-storage", 
+      partialize: (state) => ({
+        userId: state.userId,
+        items: state.items,
+      }),
+    }
+  )
+);
