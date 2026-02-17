@@ -1,30 +1,36 @@
 "use client";
-import { use, useEffect, useState } from "react";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "./store/toast";
 import { Game, useWishlist } from "./store/wishlist";
 import { useUser } from "./store/user";
 import { useCart } from "./store/cart";
 
-
-
-
 export default function Home() {
-
-
-  const addToWishlist = useWishlist((state) => state.addToWishlist); const items = useWishlist((state) => state.items); 
+  const items = useWishlist((state) => state.items);
   const [games, setGames] = useState<Game[]>([]);
   const showToast = useToast((state) => state.show);
   const user = useUser((s) => s.user);
   const setWishlist = useWishlist((s) => s.setItems);
-  const trendingGames = games.slice(0, 8); 
-  const topSellers = games.slice(8, 16); 
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const trendingGames = games.slice(0, 8);
+  const topSellers = games.slice(8, 16);
   const newReleases = games.slice(16, 24);
-  const herogames = games.slice(0, 4); 
+  const herogames = games.slice(0, 4);
 
-
-
+  useEffect(() => {
+    const denied = searchParams.get("denied");
+    if (denied === "admin") {
+      showToast("Access denied: Admins only.");
+      router.replace("/");
+    }
+  }, [searchParams, router, showToast]);
 
   useEffect(() => {
     async function loadGames() {
@@ -39,7 +45,7 @@ export default function Home() {
     loadGames();
   }, []);
 
-    useEffect(() => {
+  useEffect(() => {
     async function loadWishlist() {
       if (!user?._id) return;
 
@@ -49,78 +55,93 @@ export default function Home() {
     }
 
     loadWishlist();
-  }, [user]);
+  }, [user, setWishlist]);
 
-  const setUserCart = useCart((s) => s.setUser); 
-  useEffect(() => { 
-    if (!user?._id) return; 
-    const newKey = `cart-${user._id}`; 
-    useCart.persist.setOptions({ name: newKey });  
-    const saved = localStorage.getItem(newKey); 
-    if (saved) { useCart.setState(JSON.parse(saved).state); } 
-    setUserCart(user._id); 
-  }, [user]);
+  const setUserCart = useCart((s) => s.setUser);
+
+  useEffect(() => {
+    if (!user?._id) return;
+    const newKey = `cart-${user._id}`;
+    useCart.persist.setOptions({ name: newKey });
+    const saved = localStorage.getItem(newKey);
+    if (saved) {
+      useCart.setState(JSON.parse(saved).state);
+    }
+    setUserCart(user._id);
+  }, [user, setUserCart]);
 
   async function handleAddToWishlist(game: Game) {
-  if (!user?._id) {
-    showToast("You must be logged in");
-    return;
-  }
-
-  try {
-    const res = await fetch("/api/wishlist", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: user._id,
-        gameId: game._id,
-      }),
-    });
-
-    const updatedWishlist = await res.json();
-
-    if (updatedWishlist.error) {
-      console.error(updatedWishlist.error);
-      showToast("Error adding to wishlist");
+    if (!user?._id) {
+      showToast("You must be logged in");
       return;
     }
 
-    setWishlist(updatedWishlist);
-    showToast("Added to wishlist ✓");
-  } catch (err) {
-    console.error(err);
-    showToast("Error adding to wishlist");
+    try {
+      const res = await fetch("/api/wishlist", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: user._id,
+          gameId: game._id,
+        }),
+      });
+
+      const updatedWishlist = await res.json();
+
+      if (updatedWishlist.error) {
+        console.error(updatedWishlist.error);
+        showToast("Error adding to wishlist");
+        return;
+      }
+
+      setWishlist(updatedWishlist);
+      showToast("Added to wishlist ✓");
+    } catch (err) {
+      console.error(err);
+      showToast("Error adding to wishlist");
+    }
   }
-}
 
-
-  const heroGame: Game | undefined = games[0];
-  const alreadyAdded = items.some((item) => item._id === heroGame?._id);
   return (
-    
     <main className="min-h-screen bg-black text-white">
-
       <HeroCarousel
         games={herogames}
-       handleAddToWishlist={handleAddToWishlist}
+        handleAddToWishlist={handleAddToWishlist}
         wishlistItems={items}
       />
-      <div className="px-4 md:px-16 py-8 md:py-12 space-y-12 md:space-y-16">
 
-        <Section title={ <> Trending <span className="text-[#3DFF6B]">Now</span> </> }>
+      <div className="px-4 md:px-16 py-8 md:py-12 space-y-12 md:space-y-16">
+        <Section
+          title={
+            <>
+              Trending <span className="text-[#3DFF6B]">Now</span>
+            </>
+          }
+        >
           <GameGrid games={trendingGames} />
         </Section>
 
-        <Section title={ <> Top <span className="text-[#3DFF6B]">Sellers</span> </> }>
-          <GameGrid games={topSellers}/>
+        <Section
+          title={
+            <>
+              Top <span className="text-[#3DFF6B]">Sellers</span>
+            </>
+          }
+        >
+          <GameGrid games={topSellers} />
         </Section>
 
-        <Section title={ <> New <span className="text-[#3DFF6B]">Releases</span> </> }>
-          <GameGrid games={newReleases}/>
+        <Section
+          title={
+            <>
+              New <span className="text-[#3DFF6B]">Releases</span>
+            </>
+          }
+        >
+          <GameGrid games={newReleases} />
         </Section>
 
-       <div className="relative w-full rounded-xl overflow-hidden bg-black border border-zinc-700 p-6 md:p-10">
-
+        <div className="relative w-full rounded-xl overflow-hidden bg-black border border-zinc-700 p-6 md:p-10">
           <img
             src="/img_banner.jpg"
             alt="Gaming Promo"
@@ -132,12 +153,12 @@ export default function Home() {
           <div className="relative z-10 max-w-xl">
             <h2 className="text-2xl md:text-3xl font-extrabold leading-tight mb-4">
               PLAY HUNDREDS OF{" "}
-              <span className="text-[#3DFF6B]">HIGH‑QUALITY GAMES</span>
+              <span className="text-[#3DFF6B]">HIGH-QUALITY GAMES</span>
             </h2>
 
-
             <p className="text-zinc-300 text-lg mb-6">
-              Join Game Pass today and play new titles on day one. Experience the best gaming value ever.
+              Join Game Pass today and play new titles on day one. Experience
+              the best gaming value ever.
             </p>
 
             <div className="flex gap-4">
@@ -156,12 +177,10 @@ export default function Home() {
   );
 }
 
-
 type SectionProps = {
   title: React.ReactNode;
   children: React.ReactNode;
 };
-
 
 function Section({ title, children }: SectionProps) {
   return (
@@ -174,18 +193,13 @@ function Section({ title, children }: SectionProps) {
 
 function GameGrid({ games }: { games?: Game[] }) {
   if (!games || games.length === 0) {
-    return (
-      <p className="text-zinc-500 text-lg">
-        No games available
-      </p>
-    );
+    return <p className="text-zinc-500 text-lg">No games available</p>;
   }
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-6">
-
       {games.map((g) => (
-       <Link
+        <Link
           key={g._id}
           href={`/gamedetail/${g._id}`}
           className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 hover:bg-zinc-800 transition"
@@ -207,15 +221,15 @@ function GameGrid({ games }: { games?: Game[] }) {
           <h3 className="text-lg font-semibold">{g.title}</h3>
           <p className="text-green-400 font-bold mt-1">${g.price}</p>
         </Link>
-
       ))}
     </div>
   );
 }
+
 function HeroCarousel({
   games,
   handleAddToWishlist,
-  wishlistItems
+  wishlistItems,
 }: {
   games: Game[];
   handleAddToWishlist: (g: Game) => void;
@@ -237,7 +251,7 @@ function HeroCarousel({
   const next = () => setIndex((i) => (i + 1) % games.length);
   const prev = () => setIndex((i) => (i - 1 + games.length) % games.length);
 
-    useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setIndex((i) => (i + 1) % games.length);
     }, 7000);
@@ -245,10 +259,8 @@ function HeroCarousel({
     return () => clearInterval(interval);
   }, [games.length]);
 
-
   return (
     <section className="relative h-[400px] md:h-[500px] w-full overflow-hidden">
-
       <div className="absolute inset-0 transition-all duration-700">
         <Image
           key={current.mainImg}
@@ -271,7 +283,9 @@ function HeroCarousel({
 
         <div className="flex gap-3 md:gap-4">
           <button
-            onClick={() => (window.location.href = `/gamedetail/${current._id}`)}
+            onClick={() =>
+              (window.location.href = `/gamedetail/${current._id}`)
+            }
             className="px-4 py-2 md:px-6 md:py-3 bg-green-500 text-black font-semibold rounded-lg hover:bg-green-400 transition text-sm md:text-base"
           >
             View More
@@ -282,9 +296,10 @@ function HeroCarousel({
             disabled={alreadyAdded}
             className={`
               px-4 py-2 md:px-6 md:py-3 rounded-lg border transition text-sm md:text-base
-              ${alreadyAdded
-                ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
-                : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
+              ${
+                alreadyAdded
+                  ? "bg-green-500/20 border-green-500 text-green-400 animate-pulse cursor-default"
+                  : "bg-zinc-800 border-zinc-700 hover:bg-zinc-700"
               }
             `}
           >
@@ -293,7 +308,6 @@ function HeroCarousel({
         </div>
       </div>
 
-      {/* Bottom bar */}
       <div className="absolute inset-x-0 bottom-4 md:bottom-6 px-4 md:px-6 flex items-center justify-between pointer-events-none">
         <div className="flex-1 flex justify-center gap-2 pointer-events-auto">
           {games.map((_, i) => (
@@ -326,6 +340,3 @@ function HeroCarousel({
     </section>
   );
 }
-
-
-
