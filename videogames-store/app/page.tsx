@@ -9,7 +9,9 @@ import { Game, useWishlist } from "./store/wishlist";
 import { useUser } from "./store/user";
 import { useCart } from "./store/cart";
 
-export default function Home() {
+import { Suspense } from "react";
+
+function HomeContent() {
   const items = useWishlist((state) => state.items);
   const [games, setGames] = useState<Game[]>([]);
   const showToast = useToast((state) => state.show);
@@ -338,5 +340,19 @@ function HeroCarousel({
         </div>
       </div>
     </section>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-black text-white flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <HomeContent />
+    </Suspense>
   );
 }

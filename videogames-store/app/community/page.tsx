@@ -87,10 +87,20 @@ const CATEGORY_CARDS = [
   },
 ] as const;
 
-type UiTicketCategory = "Account" | "Billing" | "Orders" | "Downloads" | "Security";
+type UiTicketCategory =
+  | "Account"
+  | "Billing"
+  | "Orders"
+  | "Downloads"
+  | "Security";
 
 // ✅ Backend categories from our SupportTicket model/route
-type ApiTicketCategory = "Account" | "Billing" | "Refunds" | "Technical" | "Other";
+type ApiTicketCategory =
+  | "Account"
+  | "Billing"
+  | "Refunds"
+  | "Technical"
+  | "Other";
 
 function mapUiCategoryToApi(cat: UiTicketCategory): ApiTicketCategory {
   switch (cat) {
@@ -117,7 +127,8 @@ export default function SupportPage() {
 
   // Ticket modal
   const [ticketOpen, setTicketOpen] = useState(false);
-  const [ticketCategory, setTicketCategory] = useState<UiTicketCategory>("Account");
+  const [ticketCategory, setTicketCategory] =
+    useState<UiTicketCategory>("Account");
   const [ticketSubject, setTicketSubject] = useState("");
   const [ticketMessage, setTicketMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -171,7 +182,12 @@ export default function SupportPage() {
         | { ok: false; error?: { message?: string } };
 
       if (!res.ok || !data.ok) {
-        showToast(data?.error?.message || "Ticket failed. Please try again.");
+        const errorMessage =
+          data && "error" in data
+            ? data.error?.message
+            : "Ticket failed. Please try again.";
+
+        showToast(errorMessage || "Ticket failed. Please try again.");
         return;
       }
 
@@ -226,7 +242,14 @@ export default function SupportPage() {
 
               <div className="mt-3 flex flex-wrap gap-2">
                 {(
-                  ["All", "Account", "Billing", "Orders", "Downloads", "Security"] as const
+                  [
+                    "All",
+                    "Account",
+                    "Billing",
+                    "Orders",
+                    "Downloads",
+                    "Security",
+                  ] as const
                 ).map((t) => (
                   <button
                     key={t}
@@ -306,7 +329,8 @@ export default function SupportPage() {
                 Frequently Asked Questions
               </h2>
               <p className="mt-2 text-white/40 text-sm font-medium">
-                Showing <span className="text-white">{filteredFaqs.length}</span>{" "}
+                Showing{" "}
+                <span className="text-white">{filteredFaqs.length}</span>{" "}
                 results
               </p>
             </div>
@@ -325,7 +349,9 @@ export default function SupportPage() {
 
           <div className="divide-y divide-white/10">
             {filteredFaqs.length === 0 ? (
-              <div className="p-8 text-white/40">No results. Try a different keyword.</div>
+              <div className="p-8 text-white/40">
+                No results. Try a different keyword.
+              </div>
             ) : (
               filteredFaqs.map((f, idx) => {
                 const isOpen = openFaq === idx;
@@ -341,12 +367,16 @@ export default function SupportPage() {
                             {f.tag}
                           </span>
                         </div>
-                        <h3 className="text-base md:text-lg font-black">{f.q}</h3>
+                        <h3 className="text-base md:text-lg font-black">
+                          {f.q}
+                        </h3>
                       </div>
 
                       <div
                         className={`w-10 h-10 rounded-2xl border flex items-center justify-center transition ${
-                          isOpen ? "bg-[#3DFF6B] border-[#3DFF6B]" : "bg-white/5 border-white/10"
+                          isOpen
+                            ? "bg-[#3DFF6B] border-[#3DFF6B]"
+                            : "bg-white/5 border-white/10"
                         }`}
                       >
                         <ChevronDown
@@ -365,7 +395,9 @@ export default function SupportPage() {
                           exit={{ height: 0, opacity: 0 }}
                           className="overflow-hidden"
                         >
-                          <p className="mt-4 text-white/40 text-sm leading-relaxed">{f.a}</p>
+                          <p className="mt-4 text-white/40 text-sm leading-relaxed">
+                            {f.a}
+                          </p>
 
                           <div className="mt-5">
                             <button
@@ -407,7 +439,9 @@ export default function SupportPage() {
             >
               <div className="p-6 md:p-7 border-b border-white/10 flex items-center justify-between bg-gradient-to-r from-[#3DFF6B]/10 to-transparent">
                 <div>
-                  <h3 className="text-xl font-black uppercase tracking-tight">Submit a Ticket</h3>
+                  <h3 className="text-xl font-black uppercase tracking-tight">
+                    Submit a Ticket
+                  </h3>
                   <p className="mt-1 text-white/30 text-[10px] font-black uppercase tracking-widest">
                     Connected to backend
                   </p>
@@ -432,23 +466,29 @@ export default function SupportPage() {
 
                     {/* ✅ avoid dropdown overlay issues: use segmented buttons */}
                     <div className="grid grid-cols-2 gap-2">
-                      {(["Account", "Billing", "Orders", "Downloads", "Security"] as const).map(
-                        (t) => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setTicketCategory(t)}
-                            disabled={isSubmitting}
-                            className={`px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition disabled:opacity-60 disabled:cursor-not-allowed ${
-                              ticketCategory === t
-                                ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
-                                : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
-                            }`}
-                          >
-                            {t}
-                          </button>
-                        )
-                      )}
+                      {(
+                        [
+                          "Account",
+                          "Billing",
+                          "Orders",
+                          "Downloads",
+                          "Security",
+                        ] as const
+                      ).map((t) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setTicketCategory(t)}
+                          disabled={isSubmitting}
+                          className={`px-4 py-3 rounded-2xl border text-[10px] font-black uppercase tracking-widest transition disabled:opacity-60 disabled:cursor-not-allowed ${
+                            ticketCategory === t
+                              ? "bg-[#3DFF6B] text-black border-[#3DFF6B]"
+                              : "bg-white/5 text-white/70 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          {t}
+                        </button>
+                      ))}
                     </div>
                   </div>
 

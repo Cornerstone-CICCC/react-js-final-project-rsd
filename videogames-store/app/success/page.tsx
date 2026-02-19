@@ -2,8 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function SuccessPage() {
+function SuccessContent() {
   const params = useSearchParams();
   const router = useRouter();
 
@@ -30,11 +31,25 @@ export default function SuccessPage() {
     }
 
     processPurchase();
-  }, []);
+  }, [params, router]);
 
   return (
     <div className="text-white p-20">
       <h1 className="text-3xl font-bold">Processing your purchase...</h1>
     </div>
+  );
+}
+
+export default function SuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="text-white p-20 flex items-center justify-center min-h-screen">
+          <h1 className="text-xl font-bold">Verifying payment...</h1>
+        </div>
+      }
+    >
+      <SuccessContent />
+    </Suspense>
   );
 }
