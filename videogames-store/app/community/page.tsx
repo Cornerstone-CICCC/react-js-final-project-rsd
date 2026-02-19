@@ -182,12 +182,11 @@ export default function SupportPage() {
         | { ok: false; error?: { message?: string } };
 
       if (!res.ok || !data.ok) {
+        const rawData = data as any;
         const errorMessage =
-          data && "error" in data
-            ? data.error?.message
-            : "Ticket failed. Please try again.";
+          rawData.error?.message || "Ticket failed. Please try again.";
 
-        showToast(errorMessage || "Ticket failed. Please try again.");
+        showToast(errorMessage);
         return;
       }
 
